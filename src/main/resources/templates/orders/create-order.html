@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create New Order - Restaurant Credit Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <style>
+        .select2-container--bootstrap-5 .select2-selection {
+            height: calc(3.5rem + 2px);
+            padding: 1rem 0.75rem;
+            font-size: 1rem;
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
+        }
+        .required-field::after {
+            content: "*";
+            color: red;
+            margin-left: 4px;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/dashboard">
+                <i class="bi bi-shop"></i> Restaurant Credit Management
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/customers">Customers</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/orders">Orders</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    <span class="text-light me-3">Welcome, <span th:text="${adminName}">Admin</span>!</span>
+                    <a href="/logout" class="btn btn-outline-light">Logout</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container py-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0" th:text="${isEdit ? 'Edit Order' : 'Create New Order'}">Create New Order</h4>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="${isEdit ? '/orders/edit/' + order.id : '/orders/new'}" method="post" th:object="${order}">
+                            <!-- Error Messages -->
+                            <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+                            
+                            <!-- Customer Selection -->
+                            <div class="mb-4">
+                                <label for="customerId" class="form-label required-field">Select Customer</label>
+                                <select class="form-select select2" id="customerId" name="customerId" required>
+                                    <option value="">Choose a customer...</option>
+                                    <option th:each="customer : ${customers}"
+                                            th:value="${customer.id}"
+                                            th:selected="${order.customer != null && order.customer.id == customer.id}"
+                                            th:text="${customer.name + ' - Available Credit: ₹' + 
+                                                    (#numbers.formatDecimal(customer.totalCredit.subtract(customer.creditBalance), 
+                                                    1, 'COMMA', 2, 'POINT'))}">
+                                        John Doe - Available Credit: ₹1000.00
+                                    </option>
+                                </select>
+                            </div>
+
+                            <!-- Order Items -->
+                            <div class="mb-4">
+                                <label class="form-label required-field">Order Items</label>
+                                <div id="orderItems">
+                                    <!-- Existing order items if editing -->
+                                    <div th:if="${isEdit}" th:each="item, itemStat : ${order.items}" class="row mb-2 order-item">
+                                        <div class="col-md-5">
+                                            <input type="text" class="form-control" th:name="'orderItemName[' + ${itemStat.index} + ']'"
+                                                   th:value="${item.name}" placeholder="Item name" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <input type="number" class="form-control item-quantity" 
+                                                   th:name="'orderItemQuantity[' + ${itemStat.index} + ']'"
+                                                   th:value="${item.quantity}" placeholder="Quantity" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <input type="number" class="form-control item-price" step="0.01"
+                                                   th:name="'orderItemPrice[' + ${itemStat.index} + ']'"
+                                                   th:value="${item.price}" placeholder="Price" required>
+                                        </div>
+                                        <div class="col-md-1">
+                                            <button type="button" class="btn btn-danger remove-item">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <!-- Default empty item row for new orders -->
+                                    <div th:if="${!isEdit || #lists.isEmpty(order.items)}" class="row mb-2 order-item">
+                                        <div class="col-md-5">
+                                            <input type="text" class="form-control" name="orderItemName[0]" 
+                                                   placeholder="Item name" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <input type="number" class="form-control item-quantity" 
+                                                   name="orderItemQuantity[0]" placeholder="Quantity" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <input type="number" class="form-control item-price" step="0.01"
+                                                   name="orderItemPrice[0]" placeholder="Price" required>
+                                        </div>
+                                        <div class="col-md-1">
+                                            <button type="button" class="btn btn-danger remove-item">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-success mt-2" id="addItem">
+                                    <i class="bi bi-plus-circle"></i> Add Item
+                                </button>
+                            </div>
+
+                            <!-- Total Amount -->
+                            <div class="mb-4">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label for="subtotal" class="form-label">Subtotal</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">₹</span>
+                                            <input type="text" class="form-control" id="subtotal" readonly>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="tax" class="form-label">Tax (5%)</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">₹</span>
+                                            <input type="text" class="form-control" id="tax" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="totalAmount" class="form-label required-field">Total Amount</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">₹</span>
+                                    <input type="number" class="form-control" id="totalAmount" 
+                                           name="orderTotalAmount" step="0.01" required readonly>
+                                </div>
+                            </div>
+
+                            <!-- Payment Method -->
+                            <div class="mb-4">
+                                <label class="form-label required-field">Payment Method</label>
+                                <select class="form-select" id="paymentMethod" name="orderPaymentMethod" required>
+                                    <option value="">Choose payment method...</option>
+                                    <option th:each="method : ${paymentMethods}"
+                                            th:value="${method}"
+                                            th:selected="${order.paymentMethod == method}"
+                                            th:text="${method}">CASH</option>
+                                </select>
+                            </div>
+
+                            <!-- Notes -->
+                            <div class="mb-4">
+                                <label for="notes" class="form-label">Notes</label>
+                                <textarea class="form-control" id="notes" name="orderNotes" rows="3"
+                                         th:text="${order.notes}"></textarea>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-circle"></i> <span th:text="${isEdit ? 'Update Order' : 'Create Order'}">Create Order</span>
+                                </button>
+                                <a href="/orders" class="btn btn-outline-secondary">
+                                    <i class="bi bi-x-circle"></i> Cancel
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2
+            $('.select2').select2({
+                theme: 'bootstrap-5'
+            });
+
+            // Add new item row
+            $('#addItem').click(function() {
+                var newRow = $('.order-item:first').clone();
+                var index = $('.order-item').length;
+                
+                // Update input names with new index
+                newRow.find('input[name^="orderItemName"]').attr('name', 'orderItemName[' + index + ']').val('');
+                newRow.find('input[name^="orderItemQuantity"]').attr('name', 'orderItemQuantity[' + index + ']').val('');
+                newRow.find('input[name^="orderItemPrice"]').attr('name', 'orderItemPrice[' + index + ']').val('');
+                
+                $('#orderItems').append(newRow);
+                updateTotal();
+            });
+
+            // Remove item row
+            $(document).on('click', '.remove-item', function() {
+                if ($('.order-item').length > 1) {
+                    $(this).closest('.order-item').remove();
+                    updateTotal();
+                }
+            });
+
+            // Update total when quantity or price changes
+            $(document).on('input', '.item-quantity, .item-price', function() {
+                updateTotal();
+            });
+
+            // Calculate total amount
+            function updateTotal() {
+                var subtotal = 0;
+                $('.order-item').each(function() {
+                    var quantity = parseFloat($(this).find('.item-quantity').val()) || 0;
+                    var price = parseFloat($(this).find('.item-price').val()) || 0;
+                    subtotal += quantity * price;
+                });
+
+                var tax = subtotal * 0.05; // 5% tax
+                var total = subtotal + tax;
+
+                $('#subtotal').val(subtotal.toFixed(2));
+                $('#tax').val(tax.toFixed(2));
+                $('#totalAmount').val(total.toFixed(2));
+            }
+
+            // Form validation
+            $('form').submit(function(event) {
+                if (!this.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                $(this).addClass('was-validated');
+            });
+
+            // Initial total calculation
+            updateTotal();
+        });
+    </script>
+</body>
+</html>

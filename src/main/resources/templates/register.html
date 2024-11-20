@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Restaurant Credit Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .error-message {
+            color: #dc3545;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container">
+        <div class="row justify-content-center mt-5">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="text-center">Admin Registration</h3>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+                        <form action="/register" method="post" th:object="${admin}">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="name" th:field="*{name}" 
+                                       required minlength="2" maxlength="50">
+                                <div class="error-message" th:if="${#fields.hasErrors('name')}" 
+                                     th:errors="*{name}"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="username" th:field="*{username}" 
+                                       required minlength="3" maxlength="20">
+                                <div class="error-message" th:if="${#fields.hasErrors('username')}" 
+                                     th:errors="*{username}"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="password" th:field="*{password}" 
+                                       required minlength="6">
+                                <div class="error-message" th:if="${#fields.hasErrors('password')}" 
+                                     th:errors="*{password}"></div>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100 mb-3">Register</button>
+                            <div class="text-center">
+                                Already have an account? <a href="/login">Login here</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

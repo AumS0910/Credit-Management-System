@@ -135,6 +135,14 @@ public class OrderController {
             Order savedOrder = orderRepository.save(order);
             logger.info("Order saved successfully with ID: {}", savedOrder.getId());
 
+            // Update customer's credit balance
+            if (order.getPaymentMethod() == PaymentMethod.CREDIT) {
+                BigDecimal newBalance = customer.getCreditBalance().add(order.getTotalAmount());
+                customer.setCreditBalance(newBalance);
+                customerRepository.save(customer);
+                logger.info("Updated customer credit balance to: {}", newBalance);
+            }
+
             return ResponseEntity.ok().body(Map.of(
                 "message", "Order created successfully",
                 "orderId", savedOrder.getId()
@@ -227,12 +235,25 @@ public class OrderController {
             // Update total amount and tax
             BigDecimal totalAmount = new BigDecimal(orderData.get("totalAmount").toString());
             BigDecimal tax = new BigDecimal(orderData.get("tax").toString());
+
+            // If this is a credit order, adjust the customer's credit balance
+            if (existingOrder.getPaymentMethod() == PaymentMethod.CREDIT) {
+                // Remove the old amount from credit balance
+                customer.setCreditBalance(customer.getCreditBalance().subtract(existingOrder.getTotalAmount()));
+            }
+
             existingOrder.setTotalAmount(totalAmount);
             existingOrder.setTax(tax);
 
             // Save the updated order
             Order savedOrder = orderRepository.save(existingOrder);
-            logger.info("Order updated successfully with ID: {}", savedOrder.getId());
+
+            // If the updated order is credit, add the new amount to credit balance
+            if (existingOrder.getPaymentMethod() == PaymentMethod.CREDIT) {
+                customer.setCreditBalance(customer.getCreditBalance().add(totalAmount));
+                customerRepository.save(customer);
+                logger.info("Updated customer credit balance after order edit to: {}", customer.getCreditBalance());
+            }
 
             return ResponseEntity.ok().body(Map.of(
                 "message", "Order updated successfully",
@@ -254,12 +275,24 @@ public class OrderController {
         }
 
         try {
-            orderRepository.deleteById(id);
-            redirectAttributes.addFlashAttribute("successMessage", "Order deleted successfully!");
+            Order order = orderRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Order not found"));
+
+            // If this was a credit order, subtract the amount from customer's credit balance
+            if (order.getPaymentMethod() == PaymentMethod.CREDIT) {
+                Customer customer = order.getCustomer();
+                customer.setCreditBalance(customer.getCreditBalance().subtract(order.getTotalAmount()));
+                customerRepository.save(customer);
+                logger.info("Updated customer credit balance after order deletion to: {}", customer.getCreditBalance());
+            }
+
+            orderRepository.delete(order);
+            redirectAttributes.addFlashAttribute("success", "Order deleted successfully");
         } catch (Exception e) {
             logger.error("Error deleting order", e);
-            redirectAttributes.addFlashAttribute("errorMessage", "Error deleting order: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Error deleting order: " + e.getMessage());
         }
+
         return "redirect:/orders";
     }
 }

@@ -170,13 +170,20 @@
     <script>
         $(document).ready(function() {
             function createItemRow(index) {
+                const menuItems = [];
+                $('.menu-item-select:first option').each(function() {
+                    if ($(this).val()) {  // Skip the empty/placeholder option
+                        menuItems.push(`<option value="${$(this).val()}" data-price="${$(this).attr('data-price')}">${$(this).text()}</option>`);
+                    }
+                });
+                
                 return `
                     <div class="order-item-row mb-3">
                         <div class="row">
                             <div class="col-md-5">
                                 <select class="form-select menu-item-select" name="items[${index}].menuItem.id" required>
                                     <option value="">Select Menu Item</option>
-                                    ${$('.menu-item-select').first().html().split('option').slice(1).join('option')}
+                                    ${menuItems.join('')}
                                 </select>
                             </div>
                             <div class="col-md-2">
@@ -214,9 +221,10 @@
 
             // Add new item
             $('#addItemBtn').click(function() {
-                const newRow = $(createItemRow(itemCount++));
+                const newRow = $(createItemRow(itemCount));
                 $('#orderItems').append(newRow);
                 initializeSelect2(newRow.find('.menu-item-select'));
+                itemCount++;
                 updateTotals();
             });
 
@@ -231,15 +239,7 @@
             });
 
             // Update calculations when menu item or quantity changes
-            $(document).on('change', '.menu-item-select', function() {
-                updateRowCalculations($(this).closest('.order-item-row'));
-            });
-
-            $(document).on('input', '.quantity-input', function() {
-                const value = parseInt($(this).val());
-                if (value > 99) {
-                    $(this).val(99);
-                }
+            $(document).on('change', '.menu-item-select, .quantity-input', function() {
                 updateRowCalculations($(this).closest('.order-item-row'));
             });
 

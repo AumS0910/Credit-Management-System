@@ -7,10 +7,10 @@ import java.math.BigDecimal;
 @Data
 @Entity
 @Table(name = "order_items")
+@SequenceGenerator(name = "order_items_id_seq", sequenceName = "order_items_id_seq", allocationSize = 1)
 public class OrderItem {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "order_items_id_seq")
-    @SequenceGenerator(name = "order_items_id_seq", sequenceName = "order_items_id_seq", allocationSize = 1)
     private Long id;
 
     @ManyToOne

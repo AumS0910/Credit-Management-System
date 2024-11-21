@@ -5,51 +5,150 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order Form - Restaurant Credit Management</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <style>
+        .select2-container {
+            width: 100% !important;
+        }
+        .required-field::after {
+            content: " *";
+            color: red;
+        }
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .error-message {
+            display: none;
+            color: #dc3545;
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
-    <div th:replace="layout :: navbar"></div>
+    <div th:replace="fragments/header :: header"></div>
     
     <div class="container mt-4">
         <div class="row justify-content-center">
-            <div class="col-md-8">
+            <div class="col-md-10">
                 <div class="card">
                     <div class="card-header">
                         <h3 th:text="${order.id == null ? 'Create New Order' : 'Edit Order'}"></h3>
                     </div>
                     <div class="card-body">
-                        <form th:action="${order.id == null ? '/orders/add' : '/orders/edit/' + order.id}"
-                              th:object="${order}" method="post">
+                        <div class="error-message alert alert-danger" role="alert"></div>
+                        
+                        <form th:action="@{${order.id == null ? '/orders/create' : '/orders/edit/' + order.id}}"
+                              th:object="${order}" method="post" id="orderForm">
+                            
+                            <!-- Customer Selection -->
                             <div class="mb-3">
-                                <label for="customer" class="form-label">Customer</label>
-                                <select class="form-select" id="customer" th:field="*{customer}" required>
+                                <label for="customer" class="form-label required-field">Customer</label>
+                                <select class="form-select" id="customer" th:field="*{customer.id}" required>
                                     <option value="">Select Customer</option>
                                     <option th:each="cust : ${customers}"
                                             th:value="${cust.id}"
                                             th:text="${cust.name}"></option>
                                 </select>
                             </div>
-                            <div class="mb-3">
-                                <label for="description" class="form-label">Description</label>
-                                <textarea class="form-control" id="description" th:field="*{description}" rows="3" required></textarea>
+
+                            <!-- Order Items -->
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    Order Items
+                                    <button type="button" class="btn btn-sm btn-primary float-end" id="addItemBtn">
+                                        Add Item
+                                    </button>
+                                </div>
+                                <div class="card-body">
+                                    <div id="orderItems">
+                                        <div class="row mb-2">
+                                            <div class="col-md-5"><strong>Item</strong></div>
+                                            <div class="col-md-2"><strong>Quantity</strong></div>
+                                            <div class="col-md-3"><strong>Subtotal</strong></div>
+                                            <div class="col-md-2"></div>
+                                        </div>
+                                        <!-- Order items will be added here dynamically -->
+                                        <div th:each="item, itemStat : *{items}" class="order-item-row mb-3">
+                                            <div class="row">
+                                                <div class="col-md-5">
+                                                    <select class="form-select menu-item-select" 
+                                                            th:name="|items[${itemStat.index}].menuItem.id|" required>
+                                                        <option value="">Select Menu Item</option>
+                                                        <option th:each="menuItem : ${menuItems}"
+                                                                th:value="${menuItem.id}"
+                                                                th:text="${menuItem.name + ' (₹' + menuItem.price + ')'}"
+                                                                th:attr="data-price=${menuItem.price}"></option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <input type="number" class="form-control quantity-input" 
+                                                           th:name="|items[${itemStat.index}].quantity|"
+                                                           min="1" max="99" value="1" required>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <input type="text" class="form-control subtotal-display" readonly value="₹0.00">
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <button type="button" class="btn btn-danger btn-sm remove-item">Remove</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="mb-3">
-                                <label for="amount" class="form-label">Total Amount ($)</label>
-                                <input type="number" step="0.01" class="form-control" id="amount" th:field="*{amount}" required>
+
+                            <!-- Order Details -->
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="paymentMethod" class="form-label required-field">Payment Method</label>
+                                        <select class="form-select" id="paymentMethod" th:field="*{paymentMethod}" required>
+                                            <option value="">Select Payment Method</option>
+                                            <option th:each="method : ${T(com.restaurant.creditmanagement.model.PaymentMethod).values()}"
+                                                    th:value="${method}"
+                                                    th:text="${method}"></option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="notes" class="form-label">Notes</label>
+                                        <textarea class="form-control" id="notes" th:field="*{notes}" rows="2"></textarea>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="mb-3">
-                                <label for="creditAmount" class="form-label">Credit Amount ($)</label>
-                                <input type="number" step="0.01" class="form-control" id="creditAmount" th:field="*{creditAmount}">
+
+                            <!-- Order Summary -->
+                            <div class="card mb-3">
+                                <div class="card-header">Order Summary</div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <p>Total Items: <span id="totalItems">0</span></p>
+                                        </div>
+                                        <div class="col-md-6 text-end">
+                                            <p>Subtotal: ₹<span id="subtotalAmount">0.00</span></p>
+                                            <p>Tax (5%): ₹<span id="taxAmount">0.00</span></p>
+                                            <p><strong>Total Amount: ₹<span id="totalAmount">0.00</span></strong></p>
+                                            <input type="hidden" name="totalAmount" id="totalAmountInput">
+                                            <input type="hidden" name="tax" id="taxInput">
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="mb-3">
-                                <label for="status" class="form-label">Status</label>
-                                <select class="form-select" id="status" th:field="*{status}" required>
-                                    <option value="PAID">Paid</option>
-                                    <option value="CREDIT_PENDING">Credit Pending</option>
-                                </select>
-                            </div>
-                            <div class="d-grid gap-2">
+
+                            <div class="text-end">
+                                <a th:href="@{/orders}" class="btn btn-secondary">Cancel</a>
                                 <button type="submit" class="btn btn-primary">Save Order</button>
-                                <a href="/orders" class="btn btn-secondary">Cancel</a>
                             </div>
                         </form>
                     </div>
@@ -58,6 +157,203 @@
         </div>
     </div>
 
+    <!-- Loading Overlay -->
+    <div class="loading" style="display: none;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            function createItemRow(index) {
+                return `
+                    <div class="order-item-row mb-3">
+                        <div class="row">
+                            <div class="col-md-5">
+                                <select class="form-select menu-item-select" name="items[${index}].menuItem.id" required>
+                                    <option value="">Select Menu Item</option>
+                                    ${$('.menu-item-select').first().html().split('option').slice(1).join('option')}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <input type="number" class="form-control quantity-input" 
+                                       name="items[${index}].quantity" min="1" max="99" value="1" required>
+                            </div>
+                            <div class="col-md-3">
+                                <input type="text" class="form-control subtotal-display" readonly value="₹0.00">
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-danger btn-sm remove-item">Remove</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            function initializeSelect2(element) {
+                $(element).select2({
+                    theme: 'bootstrap-5',
+                    width: '100%',
+                    placeholder: 'Select Menu Item'
+                });
+            }
+
+            let itemCount = $('#orderItems .order-item-row').length || 0;
+            if (itemCount === 0) {
+                $('#orderItems').append(createItemRow(0));
+                itemCount = 1;
+            }
+
+            $('.menu-item-select').each(function() {
+                initializeSelect2(this);
+            });
+
+            // Add new item
+            $('#addItemBtn').click(function() {
+                const newRow = $(createItemRow(itemCount++));
+                $('#orderItems').append(newRow);
+                initializeSelect2(newRow.find('.menu-item-select'));
+                updateTotals();
+            });
+
+            // Remove item
+            $(document).on('click', '.remove-item', function() {
+                if ($('.order-item-row').length > 1) {
+                    $(this).closest('.order-item-row').remove();
+                    updateTotals();
+                } else {
+                    alert('At least one item is required.');
+                }
+            });
+
+            // Update calculations when menu item or quantity changes
+            $(document).on('change', '.menu-item-select', function() {
+                updateRowCalculations($(this).closest('.order-item-row'));
+            });
+
+            $(document).on('input', '.quantity-input', function() {
+                const value = parseInt($(this).val());
+                if (value > 99) {
+                    $(this).val(99);
+                }
+                updateRowCalculations($(this).closest('.order-item-row'));
+            });
+
+            function updateRowCalculations(row) {
+                const select = row.find('.menu-item-select');
+                const quantity = parseInt(row.find('.quantity-input').val()) || 0;
+                const selectedOption = select.find('option:selected');
+                const price = parseFloat(selectedOption.attr('data-price')) || 0;
+                const subtotal = price * quantity;
+                
+                row.find('.subtotal-display').val('₹' + subtotal.toFixed(2));
+                updateTotals();
+            }
+
+            function updateTotals() {
+                let totalItems = 0;
+                let subtotal = 0;
+
+                $('.order-item-row').each(function() {
+                    const quantity = parseInt($(this).find('.quantity-input').val()) || 0;
+                    const selectedOption = $(this).find('.menu-item-select option:selected');
+                    const price = parseFloat(selectedOption.attr('data-price')) || 0;
+                    
+                    totalItems += quantity;
+                    subtotal += (price * quantity);
+                });
+
+                const tax = subtotal * 0.05; // 5% tax
+                const total = subtotal + tax;
+
+                $('#totalItems').text(totalItems);
+                $('#subtotalAmount').text(subtotal.toFixed(2));
+                $('#taxAmount').text(tax.toFixed(2));
+                $('#totalAmount').text(total.toFixed(2));
+                $('#totalAmountInput').val(total.toFixed(2));
+                $('#taxInput').val(tax.toFixed(2));
+            }
+
+            // Form validation
+            $('#orderForm').on('submit', function(e) {
+                e.preventDefault(); // Prevent default form submission
+
+                // Hide any previous error messages
+                $('.error-message').hide();
+
+                // Basic validation
+                let isValid = true;
+                const requiredFields = $(this).find('[required]');
+                
+                requiredFields.each(function() {
+                    if (!$(this).val()) {
+                        isValid = false;
+                        $(this).addClass('is-invalid');
+                    } else {
+                        $(this).removeClass('is-invalid');
+                    }
+                });
+
+                if (!isValid) {
+                    $('.error-message').text('Please fill in all required fields.').show();
+                    return false;
+                }
+
+                // Prepare order data
+                const orderData = {
+                    'customer.id': $('#customer').val(),
+                    'paymentMethod': $('#paymentMethod').val(),
+                    'notes': $('#notes').val(),
+                    'totalAmount': $('#totalAmountInput').val(),
+                    'tax': $('#taxInput').val(),
+                    'items': []
+                };
+
+                // Collect order items
+                $('.order-item-row').each(function() {
+                    const menuItemId = $(this).find('.menu-item-select').val();
+                    const quantity = $(this).find('.quantity-input').val();
+                    
+                    if (menuItemId && quantity) {
+                        orderData.items.push({
+                            'menuItem.id': menuItemId,
+                            'quantity': quantity
+                        });
+                    }
+                });
+
+                // Show loading overlay
+                $('.loading').show();
+
+                // Submit form using AJAX
+                $.ajax({
+                    url: this.action,
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(orderData),
+                    success: function(response) {
+                        window.location.href = '/orders';
+                    },
+                    error: function(xhr) {
+                        $('.loading').hide();
+                        let errorMessage = 'An error occurred while saving the order. Please try again.';
+                        if (xhr.responseJSON && xhr.responseJSON.error) {
+                            errorMessage = xhr.responseJSON.error;
+                        }
+                        $('.error-message').text(errorMessage).show();
+                    }
+                });
+            });
+
+            // Initialize calculations
+            $('.order-item-row').each(function() {
+                updateRowCalculations($(this));
+            });
+        });
+    </script>
 </body>
 </html>

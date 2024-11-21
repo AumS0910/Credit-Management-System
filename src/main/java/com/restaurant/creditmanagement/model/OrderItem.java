@@ -1,28 +1,25 @@
 package com.restaurant.creditmanagement.model;
 
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
-
 import javax.persistence.*;
 import java.math.BigDecimal;
 
 @Data
 @Entity
 @Table(name = "order_items")
-@Getter
-@Setter
 public class OrderItem {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "order_items_id_seq")
+    @SequenceGenerator(name = "order_items_id_seq", sequenceName = "order_items_id_seq", allocationSize = 1)
     private Long id;
 
     @ManyToOne
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
 
-    @Column(nullable = false)
-    private String name;
+    @ManyToOne
+    @JoinColumn(name = "menu_item_id", nullable = false)
+    private MenuItem menuItem;
 
     @Column(nullable = false)
     private Integer quantity;
@@ -36,6 +33,9 @@ public class OrderItem {
     @PrePersist
     @PreUpdate
     public void calculateSubtotal() {
-        this.subtotal = this.price.multiply(BigDecimal.valueOf(this.quantity));
+        if (menuItem != null && quantity != null) {
+            this.price = menuItem.getPrice();
+            this.subtotal = this.price.multiply(BigDecimal.valueOf(this.quantity));
+        }
     }
 }

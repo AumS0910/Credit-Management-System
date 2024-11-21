@@ -1,14 +1,13 @@
 package com.restaurant.creditmanagement.controller;
 
-import com.restaurant.creditmanagement.model.Customer;
-import com.restaurant.creditmanagement.model.Order;
-import com.restaurant.creditmanagement.model.OrderItem;
-import com.restaurant.creditmanagement.model.PaymentMethod;
+import com.restaurant.creditmanagement.model.*;
 import com.restaurant.creditmanagement.repository.CustomerRepository;
+import com.restaurant.creditmanagement.repository.MenuItemRepository;
 import com.restaurant.creditmanagement.repository.OrderRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -32,6 +31,9 @@ public class OrderController {
     @Autowired
     private CustomerRepository customerRepository;
 
+    @Autowired
+    private MenuItemRepository menuItemRepository;
+
     @GetMapping
     public String listOrders(Model model, HttpSession session) {
         if (session.getAttribute("adminId") == null) {
@@ -48,105 +50,102 @@ public class OrderController {
             return "redirect:/login";
         }
         
-        List<Customer> customers = customerRepository.findAll();
-        model.addAttribute("customers", customers);
-        model.addAttribute("order", new Order());
+        Order order = new Order();
+        order.setItems(new ArrayList<>());
+        order.getItems().add(new OrderItem()); // Add one empty item by default
+        
+        model.addAttribute("order", order);
+        model.addAttribute("customers", customerRepository.findAll());
+        model.addAttribute("menuItems", menuItemRepository.findByAvailableTrue());
         model.addAttribute("paymentMethods", PaymentMethod.values());
-        model.addAttribute("isEdit", false);
-        return "orders/create-order";
+        
+        return "orders/form";
     }
 
-    @PostMapping("/new")
-    public String createOrder(@RequestParam Map<String, String> allParams,
-                            RedirectAttributes redirectAttributes,
-                            HttpSession session) {
+    @PostMapping("/create")
+    @ResponseBody
+    public ResponseEntity<?> createOrder(@RequestBody Map<String, Object> orderData, HttpSession session) {
         if (session.getAttribute("adminId") == null) {
-            return "redirect:/login";
+            return ResponseEntity.status(401).body("Unauthorized");
         }
-        
+
         try {
-            logger.info("Received parameters: {}", allParams);
+            logger.info("Received order data: {}", orderData);
+
+            // Create new order
+            Order order = new Order();
             
-            // Extract and validate customerId
-            Long customerId = Long.parseLong(allParams.get("customerId"));
+            // Set customer
+            Long customerId = Long.parseLong(orderData.get("customer.id").toString());
             Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
+            order.setCustomer(customer);
 
-            // Extract and validate totalAmount
-            BigDecimal totalAmount = new BigDecimal(allParams.get("orderTotalAmount"));
+            // Set payment method
+            order.setPaymentMethod(PaymentMethod.valueOf(orderData.get("paymentMethod").toString()));
 
-            // Extract and validate paymentMethod
-            PaymentMethod paymentMethod = PaymentMethod.valueOf(allParams.get("orderPaymentMethod"));
-
-            // Get notes if present
-            String notes = allParams.get("orderNotes");
-
-            // Validate credit limit for CREDIT payment method
-            if (paymentMethod == PaymentMethod.CREDIT) {
-                BigDecimal newBalance = customer.getCreditBalance().add(totalAmount);
-                if (newBalance.compareTo(customer.getTotalCredit()) > 0) {
-                    redirectAttributes.addFlashAttribute("error", 
-                        "Order exceeds customer's credit limit. Available credit: ₹" + 
-                        customer.getTotalCredit().subtract(customer.getCreditBalance()));
-                    return "redirect:/orders/new";
-                }
+            // Set notes if present
+            if (orderData.get("notes") != null) {
+                order.setNotes(orderData.get("notes").toString());
             }
 
-            Order order = new Order();
-            order.setCustomer(customer);
-            order.setTotalAmount(totalAmount);
-            order.setPaymentMethod(paymentMethod);
-            order.setNotes(notes);
+            // Set timestamps
+            order.setCreatedAt(LocalDateTime.now());
             order.setOrderDate(LocalDateTime.now());
 
             // Process order items
-            List<OrderItem> items = new ArrayList<>();
-            int i = 0;
-            while (allParams.containsKey("orderItemName[" + i + "]")) {
-                String itemName = allParams.get("orderItemName[" + i + "]");
-                int quantity = Integer.parseInt(allParams.get("orderItemQuantity[" + i + "]"));
-                BigDecimal price = new BigDecimal(allParams.get("orderItemPrice[" + i + "]"));
-                BigDecimal subtotal = price.multiply(BigDecimal.valueOf(quantity));
+            List<Map<String, Object>> items = (List<Map<String, Object>>) orderData.get("items");
+            List<OrderItem> orderItems = new ArrayList<>();
 
-                OrderItem item = new OrderItem();
-                item.setName(itemName);
-                item.setQuantity(quantity);
-                item.setPrice(price);
-                item.setSubtotal(subtotal);
-                item.setOrder(order);
-                items.add(item);
-                i++;
+            for (Map<String, Object> itemData : items) {
+                if (itemData.get("menuItem.id") != null && !itemData.get("menuItem.id").toString().isEmpty()) {
+                    OrderItem item = new OrderItem();
+                    
+                    // Set menu item
+                    Long menuItemId = Long.parseLong(itemData.get("menuItem.id").toString());
+                    MenuItem menuItem = menuItemRepository.findById(menuItemId)
+                        .orElseThrow(() -> new RuntimeException("Menu item not found: " + menuItemId));
+                    item.setMenuItem(menuItem);
+                    
+                    // Set quantity
+                    item.setQuantity(Integer.parseInt(itemData.get("quantity").toString()));
+                    
+                    // Set price from menu item
+                    item.setPrice(menuItem.getPrice());
+                    
+                    // Calculate subtotal
+                    item.calculateSubtotal();
+                    
+                    // Set order reference
+                    item.setOrder(order);
+                    
+                    orderItems.add(item);
+                }
             }
-            order.setItems(items);
+
+            order.setItems(orderItems);
+
+            // Set total amount and tax
+            BigDecimal totalAmount = new BigDecimal(orderData.get("totalAmount").toString());
+            BigDecimal tax = new BigDecimal(orderData.get("tax").toString());
+            order.setTotalAmount(totalAmount);
+            order.setTax(tax);
 
             // Save the order
-            orderRepository.save(order);
+            Order savedOrder = orderRepository.save(order);
+            logger.info("Order saved successfully with ID: {}", savedOrder.getId());
 
-            // Update customer credit balance if payment method is CREDIT
-            if (paymentMethod == PaymentMethod.CREDIT) {
-                customer.setCreditBalance(customer.getCreditBalance().add(totalAmount));
-                customerRepository.save(customer);
-            }
+            return ResponseEntity.ok().body(Map.of(
+                "message", "Order created successfully",
+                "orderId", savedOrder.getId()
+            ));
 
-            redirectAttributes.addFlashAttribute("success", "Order created successfully!");
-            return "redirect:/orders";
         } catch (Exception e) {
-            logger.error("Error creating order: ", e);
-            redirectAttributes.addFlashAttribute("error", "Error creating order: " + e.getMessage());
-            return "redirect:/orders/new";
+            logger.error("Error creating order", e);
+            return ResponseEntity.badRequest().body(Map.of(
+                "error", "Error creating order: " + e.getMessage()
+            ));
         }
-    }
-
-    @GetMapping("/view/{id}")
-    public String viewOrder(@PathVariable Long id, Model model, HttpSession session) {
-        if (session.getAttribute("adminId") == null) {
-            return "redirect:/login";
-        }
-        
-        Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
-        model.addAttribute("order", order);
-        return "orders/view";
     }
 
     @GetMapping("/edit/{id}")
@@ -154,90 +153,113 @@ public class OrderController {
         if (session.getAttribute("adminId") == null) {
             return "redirect:/login";
         }
-        
+
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
-        
-        List<Customer> customers = customerRepository.findAll();
-        model.addAttribute("customers", customers);
+
         model.addAttribute("order", order);
+        model.addAttribute("customers", customerRepository.findAll());
+        model.addAttribute("menuItems", menuItemRepository.findByAvailableTrue());
         model.addAttribute("paymentMethods", PaymentMethod.values());
-        model.addAttribute("isEdit", true);
-        return "orders/create-order";
+
+        return "orders/form";
     }
 
     @PostMapping("/edit/{id}")
-    public String updateOrder(@PathVariable Long id,
-                            @RequestParam Map<String, String> allParams,
-                            RedirectAttributes redirectAttributes,
-                            HttpSession session) {
+    @ResponseBody
+    public ResponseEntity<?> updateOrder(@PathVariable Long id, @RequestBody Map<String, Object> orderData, 
+                                       HttpSession session) {
         if (session.getAttribute("adminId") == null) {
-            return "redirect:/login";
+            return ResponseEntity.status(401).body("Unauthorized");
         }
-        
+
         try {
             Order existingOrder = orderRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Order not found"));
 
-            // Extract and validate customerId
-            Long customerId = Long.parseLong(allParams.get("customerId"));
+            // Update customer
+            Long customerId = Long.parseLong(orderData.get("customer.id").toString());
             Customer customer = customerRepository.findById(customerId)
-                    .orElseThrow(() -> new RuntimeException("Customer not found"));
+                .orElseThrow(() -> new RuntimeException("Customer not found"));
+            existingOrder.setCustomer(customer);
 
-            // Extract and validate totalAmount
-            BigDecimal totalAmount = new BigDecimal(allParams.get("orderTotalAmount"));
+            // Update payment method
+            existingOrder.setPaymentMethod(PaymentMethod.valueOf(orderData.get("paymentMethod").toString()));
 
-            // Extract and validate paymentMethod
-            PaymentMethod paymentMethod = PaymentMethod.valueOf(allParams.get("orderPaymentMethod"));
+            // Update notes
+            if (orderData.get("notes") != null) {
+                existingOrder.setNotes(orderData.get("notes").toString());
+            }
 
-            // Get notes if present
-            String notes = allParams.get("orderNotes");
+            // Update order items
+            List<Map<String, Object>> items = (List<Map<String, Object>>) orderData.get("items");
+            List<OrderItem> orderItems = new ArrayList<>();
 
-            // If payment method is changing to CREDIT, validate credit limit
-            if (paymentMethod == PaymentMethod.CREDIT && existingOrder.getPaymentMethod() != PaymentMethod.CREDIT) {
-                BigDecimal newBalance = customer.getCreditBalance().add(totalAmount);
-                if (newBalance.compareTo(customer.getTotalCredit()) > 0) {
-                    redirectAttributes.addFlashAttribute("error", 
-                        "Order exceeds customer's credit limit. Available credit: ₹" + 
-                        customer.getTotalCredit().subtract(customer.getCreditBalance()));
-                    return "redirect:/orders/edit/" + id;
+            for (Map<String, Object> itemData : items) {
+                if (itemData.get("menuItem.id") != null && !itemData.get("menuItem.id").toString().isEmpty()) {
+                    OrderItem item = new OrderItem();
+                    
+                    // Set menu item
+                    Long menuItemId = Long.parseLong(itemData.get("menuItem.id").toString());
+                    MenuItem menuItem = menuItemRepository.findById(menuItemId)
+                        .orElseThrow(() -> new RuntimeException("Menu item not found: " + menuItemId));
+                    item.setMenuItem(menuItem);
+                    
+                    // Set quantity
+                    item.setQuantity(Integer.parseInt(itemData.get("quantity").toString()));
+                    
+                    // Set price from menu item
+                    item.setPrice(menuItem.getPrice());
+                    
+                    // Calculate subtotal
+                    item.calculateSubtotal();
+                    
+                    // Set order reference
+                    item.setOrder(existingOrder);
+                    
+                    orderItems.add(item);
                 }
             }
 
-            // Update order details
-            existingOrder.setCustomer(customer);
-            existingOrder.setTotalAmount(totalAmount);
-            existingOrder.setPaymentMethod(paymentMethod);
-            existingOrder.setNotes(notes);
-
-            // Clear existing items and add updated ones
             existingOrder.getItems().clear();
-            List<OrderItem> items = new ArrayList<>();
-            int i = 0;
-            while (allParams.containsKey("orderItemName[" + i + "]")) {
-                String itemName = allParams.get("orderItemName[" + i + "]");
-                int quantity = Integer.parseInt(allParams.get("orderItemQuantity[" + i + "]"));
-                BigDecimal price = new BigDecimal(allParams.get("orderItemPrice[" + i + "]"));
-                BigDecimal subtotal = price.multiply(BigDecimal.valueOf(quantity));
+            existingOrder.getItems().addAll(orderItems);
 
-                OrderItem item = new OrderItem();
-                item.setName(itemName);
-                item.setQuantity(quantity);
-                item.setPrice(price);
-                item.setSubtotal(subtotal);
-                item.setOrder(existingOrder);
-                items.add(item);
-                i++;
-            }
-            existingOrder.setItems(items);
+            // Update total amount and tax
+            BigDecimal totalAmount = new BigDecimal(orderData.get("totalAmount").toString());
+            BigDecimal tax = new BigDecimal(orderData.get("tax").toString());
+            existingOrder.setTotalAmount(totalAmount);
+            existingOrder.setTax(tax);
 
-            orderRepository.save(existingOrder);
-            redirectAttributes.addFlashAttribute("success", "Order updated successfully!");
-            return "redirect:/orders";
+            // Save the updated order
+            Order savedOrder = orderRepository.save(existingOrder);
+            logger.info("Order updated successfully with ID: {}", savedOrder.getId());
+
+            return ResponseEntity.ok().body(Map.of(
+                "message", "Order updated successfully",
+                "orderId", savedOrder.getId()
+            ));
+
         } catch (Exception e) {
-            logger.error("Error updating order: ", e);
-            redirectAttributes.addFlashAttribute("error", "Error updating order: " + e.getMessage());
-            return "redirect:/orders/edit/" + id;
+            logger.error("Error updating order", e);
+            return ResponseEntity.badRequest().body(Map.of(
+                "error", "Error updating order: " + e.getMessage()
+            ));
         }
+    }
+
+    @PostMapping("/delete/{id}")
+    public String deleteOrder(@PathVariable Long id, RedirectAttributes redirectAttributes, HttpSession session) {
+        if (session.getAttribute("adminId") == null) {
+            return "redirect:/login";
+        }
+
+        try {
+            orderRepository.deleteById(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Order deleted successfully!");
+        } catch (Exception e) {
+            logger.error("Error deleting order", e);
+            redirectAttributes.addFlashAttribute("errorMessage", "Error deleting order: " + e.getMessage());
+        }
+        return "redirect:/orders";
     }
 }

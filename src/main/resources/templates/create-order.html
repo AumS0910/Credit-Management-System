@@ -85,41 +85,36 @@
                             <div class="mb-4">
                                 <label class="form-label required-field">Order Items</label>
                                 <div id="orderItems">
-                                    <!-- Existing order items if editing -->
-                                    <div th:if="${isEdit}" th:each="item, itemStat : ${order.items}" class="row mb-2 order-item">
-                                        <div class="col-md-5">
-                                            <input type="text" class="form-control" th:name="'orderItemName[' + ${itemStat.index} + ']'"
-                                                   th:value="${item.name}" placeholder="Item name" required>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <input type="number" class="form-control item-quantity" 
-                                                   th:name="'orderItemQuantity[' + ${itemStat.index} + ']'"
-                                                   th:value="${item.quantity}" placeholder="Quantity" required>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <input type="number" class="form-control item-price" step="0.01"
-                                                   th:name="'orderItemPrice[' + ${itemStat.index} + ']'"
-                                                   th:value="${item.price}" placeholder="Price" required>
-                                        </div>
-                                        <div class="col-md-1">
-                                            <button type="button" class="btn btn-danger remove-item">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
+                                    <div class="row mb-3">
+                                        <div class="col-12">
+                                            <select id="menuCategory" class="form-select">
+                                                <option value="">All Categories</option>
+                                                <option th:each="category : ${categories}" 
+                                                        th:value="${category}" 
+                                                        th:text="${category}">Category</option>
+                                            </select>
                                         </div>
                                     </div>
-                                    <!-- Default empty item row for new orders -->
-                                    <div th:if="${!isEdit || #lists.isEmpty(order.items)}" class="row mb-2 order-item">
+                                    <div class="row mb-2 order-item">
                                         <div class="col-md-5">
-                                            <input type="text" class="form-control" name="orderItemName[0]" 
-                                                   placeholder="Item name" required>
+                                            <select class="form-select menu-item-select" name="menuItemId[]" required>
+                                                <option value="">Select Menu Item</option>
+                                                <option th:each="item : ${menuItems}"
+                                                        th:value="${item.id}"
+                                                        th:text="${item.name + ' - ₹' + item.price}"
+                                                        th:data-price="${item.price}"
+                                                        th:data-category="${item.category}">
+                                                    Item Name - ₹100
+                                                </option>
+                                            </select>
                                         </div>
                                         <div class="col-md-3">
                                             <input type="number" class="form-control item-quantity" 
-                                                   name="orderItemQuantity[0]" placeholder="Quantity" required>
+                                                   name="quantity[]" value="1" min="1" required>
                                         </div>
                                         <div class="col-md-3">
-                                            <input type="number" class="form-control item-price" step="0.01"
-                                                   name="orderItemPrice[0]" placeholder="Price" required>
+                                            <input type="text" class="form-control item-price" 
+                                                   name="price[]" readonly>
                                         </div>
                                         <div class="col-md-1">
                                             <button type="button" class="btn btn-danger remove-item">
@@ -128,7 +123,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <button type="button" class="btn btn-secondary" id="addItem">
+                                <button type="button" class="btn btn-secondary mt-2" id="addItem">
                                     <i class="bi bi-plus-circle"></i> Add Item
                                 </button>
                             </div>
@@ -202,77 +197,83 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         $(document).ready(function() {
-            // Initialize select2
+            // Initialize Select2
             $('.select2').select2({
                 theme: 'bootstrap-5'
             });
 
-            let itemCount = 0;
+            // Function to update item price
+            function updateItemPrice(row) {
+                const select = row.find('.menu-item-select');
+                const quantity = row.find('.item-quantity').val();
+                const price = select.find(':selected').data('price') || 0;
+                row.find('.item-price').val((price * quantity).toFixed(2));
+                updateTotal();
+            }
 
             // Add new item row
             $('#addItem').click(function() {
-                itemCount++;
-                const newItem = `
-                    <div class="row mb-2 order-item">
-                        <div class="col-md-5">
-                            <input type="text" class="form-control" name="orderItemName[${itemCount}]" 
-                                   placeholder="Item name" required>
-                        </div>
-                        <div class="col-md-3">
-                            <input type="number" class="form-control item-quantity" 
-                                   name="orderItemQuantity[${itemCount}]" placeholder="Quantity" 
-                                   min="1" required>
-                        </div>
-                        <div class="col-md-3">
-                            <input type="number" class="form-control item-price" 
-                                   name="orderItemPrice[${itemCount}]" placeholder="Price" 
-                                   min="0" step="0.01" required>
-                        </div>
-                        <div class="col-md-1">
-                            <button type="button" class="btn btn-danger remove-item">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                `;
-                $('#orderItems').append(newItem);
+                const newRow = $('.order-item:first').clone();
+                newRow.find('input').val('');
+                newRow.find('select').val('');
+                newRow.find('.item-quantity').val(1);
+                $('#orderItems').append(newRow);
+                updateItemPrice(newRow);
             });
 
             // Remove item row
             $(document).on('click', '.remove-item', function() {
-                $(this).closest('.order-item').remove();
-                updateTotal();
+                if ($('.order-item').length > 1) {
+                    $(this).closest('.order-item').remove();
+                    updateTotal();
+                }
             });
 
-            // Calculate total when quantity or price changes
-            $(document).on('input', '.item-quantity, .item-price', function() {
-                updateTotal();
+            // Update price on item selection
+            $(document).on('change', '.menu-item-select', function() {
+                updateItemPrice($(this).closest('.order-item'));
             });
 
-            // Update total calculation
+            // Update price on quantity change
+            $(document).on('change', '.item-quantity', function() {
+                updateItemPrice($(this).closest('.order-item'));
+            });
+
+            // Filter menu items by category
+            $('#menuCategory').change(function() {
+                const category = $(this).val();
+                $('.menu-item-select option:not(:first)').each(function() {
+                    const itemCategory = $(this).data('category');
+                    if (!category || itemCategory === category) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            });
+
+            // Calculate total
             function updateTotal() {
                 let subtotal = 0;
-                $('.order-item').each(function() {
-                    const quantity = parseFloat($(this).find('.item-quantity').val()) || 0;
-                    const price = parseFloat($(this).find('.item-price').val()) || 0;
-                    subtotal += quantity * price;
+                $('.item-price').each(function() {
+                    subtotal += parseFloat($(this).val()) || 0;
                 });
-
-                const tax = subtotal * 0.05; // 5% tax
-                const total = subtotal + tax;
-
+                
                 $('#subtotal').val(subtotal.toFixed(2));
+                
+                // Calculate tax (assuming 5% tax rate)
+                const taxRate = 0.05;
+                const tax = subtotal * taxRate;
                 $('#tax').val(tax.toFixed(2));
+                
+                // Calculate total
+                const total = subtotal + tax;
                 $('#totalAmount').val(total.toFixed(2));
             }
 
-            // Form validation
-            $('form').submit(function(event) {
-                if (!this.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                $(this).addClass('was-validated');
+            // Initialize prices
+            $('.order-item').each(function() {
+                updateItemPrice($(this));
             });
         });
     </script>

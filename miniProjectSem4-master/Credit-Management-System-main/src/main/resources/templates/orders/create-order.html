@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Create Order - Restaurant Credit Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .order-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .order-items {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        .item-row {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .customer-info {
+            background: #e9ecef;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        .total-section {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="order-container">
+        <div class="order-header">
+            <div class="d-flex align-items-center">
+                <a th:href="@{/dashboard}" class="btn btn-outline-primary me-3">
+                    <i class="bi bi-arrow-left"></i> Back to Dashboard
+                </a>
+                <h2>Create New Order</h2>
+            </div>
+            <div>
+                <span class="badge bg-success">Paid</span>
+                <span>Order #12567</span>
+            </div>
+        </div>
+
+        <form th:action="@{/orders/create}" method="post" id="orderForm">
+            <!-- Add this hidden input for tax -->
+            <input type="hidden" name="tax" id="hiddenTax" value="0">
+            <input type="hidden" name="totalAmount" id="hiddenTotal" value="0">
+            
+            <!-- Customer Selection -->
+            <div class="customer-info">
+                <h5>Customer Information</h5>
+                <select class="form-select mb-3" name="customerId" required>
+                    <option value="">Select Customer</option>
+                    <option th:each="customer : ${customers}"
+                            th:value="${customer.id}"
+                            th:text="${customer.name}">
+                    </option>
+                </select>
+            </div>
+
+            <!-- Order Items -->
+            <div class="order-items">
+                <h5>Order Items</h5>
+                <div id="orderItems">
+                    <div class="item-row">
+                        <div class="col-5">
+                            <select class="form-select" name="menuItemIds[]" required>
+                                <option value="">Select Item</option>
+                                <option th:each="item : ${menuItems}"
+                                        th:value="${item.id}"
+                                        th:text="${item.name + ' - ₹' + item.price}"
+                                        th:selected="${item.id == selectedMenuItemId}">
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-2">
+                            <input type="number" class="form-control" name="quantities[]"
+                                   placeholder="Qty" required min="1" value="1">
+                        </div>
+                        <div class="col-2">
+                            <button type="button" class="btn btn-danger btn-sm remove-item">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-outline-primary mt-2" id="addItem">
+                    <i class="bi bi-plus"></i> Add Another Item
+                </button>
+            </div>
+
+            <!-- Order Details -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Payment Method</label>
+                        <select class="form-select" name="paymentMethod" required>
+                            <option value="CASH">Cash</option>
+                            <option value="CREDIT">Credit</option>
+                            <option value="CARD">Card</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        <textarea class="form-control" name="notes" rows="3"
+                                 placeholder="Add any special instructions"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Section -->
+            <div class="total-section">
+                <div class="row">
+                    <div class="col-md-6 offset-md-6">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal:</span>
+                            <span id="subtotal">₹0.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Tax (5%):</span>
+                            <span id="tax">₹0.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between fw-bold">
+                            <span>Total:</span>
+                            <span id="total">₹0.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end mt-4">
+                <!-- Add these hidden inputs -->
+                <input type="hidden" name="orderDate" th:value="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd HH:mm:ss')}">
+                <input type="hidden" name="status" value="PENDING">
+                <input type="hidden" name="tax" id="hiddenTax" value="0">
+                <input type="hidden" name="totalAmount" id="hiddenTotal" value="0">
+                <div class="d-flex justify-content-end mt-4">
+                    <a th:href="@{/orders/list}" class="btn btn-outline-secondary me-2">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Create Order</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Add this after your existing scripts -->
+    <!-- Add this hidden input inside the form, before the submit button -->
+    <input type="hidden" name="totalAmount" id="hiddenTotal" value="0">
+    
+    <!-- Update the JavaScript section -->
+    <script>
+        function updateTotals() {
+            let subtotal = 0;
+            const menuItems = document.querySelectorAll('select[name="menuItemIds[]"]');
+            const quantities = document.querySelectorAll('input[name="quantities[]"]');
+            
+            menuItems.forEach((select, index) => {
+                const selectedOption = select.options[select.selectedIndex];
+                if (selectedOption.value) {
+                    const price = parseFloat(selectedOption.text.split('₹')[1]);
+                    const quantity = parseInt(quantities[index].value) || 0;
+                    subtotal += price * quantity;
+                }
+            });
+    
+            const tax = subtotal * 0.05; // 5% tax
+            const total = subtotal + tax;
+    
+            document.getElementById('subtotal').textContent = '₹' + subtotal.toFixed(2);
+            document.getElementById('tax').textContent = '₹' + tax.toFixed(2);
+            document.getElementById('total').textContent = '₹' + total.toFixed(2);
+            
+            // Update hidden inputs
+            document.getElementById('hiddenTax').value = tax.toFixed(2);
+            document.getElementById('hiddenTotal').value = total.toFixed(2);
+        }
+    
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initial calculation
+            updateTotals();
+    
+            // Add Item button functionality
+            document.getElementById('addItem').addEventListener('click', function() {
+                const itemRow = document.querySelector('.item-row').cloneNode(true);
+                itemRow.querySelector('select').value = '';
+                itemRow.querySelector('input[type="number"]').value = '1';
+                document.getElementById('orderItems').appendChild(itemRow);
+                
+                // Add event listeners to new elements
+                itemRow.querySelector('select').addEventListener('change', updateTotals);
+                itemRow.querySelector('input[type="number"]').addEventListener('change', updateTotals);
+                itemRow.querySelector('.remove-item').addEventListener('click', function() {
+                    if (document.querySelectorAll('.item-row').length > 1) {
+                        this.closest('.item-row').remove();
+                        updateTotals();
+                    }
+                });
+            });
+    
+            // Remove item functionality
+            document.querySelectorAll('.remove-item').forEach(button => {
+                button.addEventListener('click', function() {
+                    if (document.querySelectorAll('.item-row').length > 1) {
+                        this.closest('.item-row').remove();
+                        updateTotals();
+                    }
+                });
+            });
+    
+            // Update on quantity change
+            document.querySelectorAll('input[name="quantities[]"]').forEach(input => {
+                input.addEventListener('change', updateTotals);
+            });
+    
+            // Update on menu item selection change
+            document.querySelectorAll('select[name="menuItemIds[]"]').forEach(select => {
+                select.addEventListener('change', updateTotals);
+            });
+    
+            // Add form submission handler
+            document.getElementById('orderForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Validate required fields
+                const customerId = document.querySelector('select[name="customerId"]').value;
+                const menuItems = document.querySelectorAll('select[name="menuItemIds[]"]');
+                let hasItems = false;
+                
+                menuItems.forEach(item => {
+                    if(item.value) hasItems = true;
+                });
+                
+                if(!customerId) {
+                    alert('Please select a customer');
+                    return;
+                }
+                
+                if(!hasItems) {
+                    alert('Please select at least one menu item');
+                    return;
+                }
+                
+                // Update totals one last time before submission
+                updateTotals();
+                
+                // Submit the form
+                this.submit();
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu Items - Restaurant Credit Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #FF6B6B;
+            --secondary-color: #4ECDC4;
+            --background-color: #F8F9FA;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--background-color);
+        }
+
+        .sidebar {
+            width: 250px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            background: white;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+
+        .main-content {
+            margin-left: 250px;
+            padding: 30px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .filter-section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 25px;
+        }
+
+        .menu-item {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            transition: transform 0.3s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .menu-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .menu-item img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+        }
+
+        .menu-item-content {
+            padding: 15px;
+        }
+
+        .price-tag {
+            background: #4ECDC4;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 14px;
+            display: inline-block;
+        }
+
+        .rating {
+            color: #FFD700;
+        }
+
+        .filter-checkbox {
+            margin: 10px 0;
+        }
+
+        .price-range {
+            padding: 20px 0;
+        }
+
+        .add-to-cart-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 20px;
+            width: 100%;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+
+        .add-to-cart-btn:hover {
+            background: #ff5252;
+            transform: scale(1.05);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .user-profile img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h3 class="mb-4">FoodMode</h3>
+        <div class="filter-section">
+            <h5>FILTER</h5>
+            <div class="filter-checkbox">
+                <input type="checkbox" id="allPromo">
+                <label for="allPromo">All Promo</label>
+            </div>
+            <div class="filter-checkbox">
+                <input type="checkbox" id="specialMenu">
+                <label for="specialMenu">Special Menu</label>
+            </div>
+            <div class="filter-checkbox">
+                <input type="checkbox" id="mainFood">
+                <label for="mainFood">Main Food</label>
+            </div>
+            <!-- Add more filter options -->
+            
+            <div class="price-range">
+                <h5>PRICE RANGE</h5>
+                <input type="range" class="form-range" min="0" max="1000" step="10">
+                <div class="d-flex justify-content-between">
+                    <span>₹10</span>
+                    <span>₹1000</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="header">
+            <div>
+                <h4>Hello <span th:text="${adminUsername}">Admin</span>,</h4>
+                <p class="text-muted">Welcome back!</p>
+            </div>
+            <div class="user-profile">
+                <span>Menu Guide</span>
+                <div class="dropdown">
+                    <button class="btn dropdown-toggle" type="button" id="languageDropdown" data-bs-toggle="dropdown">
+                        English
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#">English</a></li>
+                        <li><a class="dropdown-item" href="#">Hindi</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="menu-grid">
+            <!-- Menu Items will be dynamically added here -->
+            <div class="menu-item" th:each="item : ${menuItems}">
+                <img th:src="${item.imageUrl}" alt="Food Image">
+                <div class="menu-item-content">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 th:text="${item.name}">Chicken Sandwich</h5>
+                        <span class="price-tag">₹<span th:text="${item.price}">12.99</span></span>
+                    </div>
+                    <div class="rating">
+                        ★★★★★
+                    </div>
+                    <p class="text-muted" th:text="${item.description}">Made with fresh ingredients and quality maintain every food.</p>
+                    <button class="add-to-cart-btn">Add to Cart</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

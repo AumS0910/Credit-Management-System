@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Order - Restaurant Credit Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .order-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .order-items {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        .item-row {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .customer-info {
+            background: #e9ecef;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        .total-section {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="order-container">
+        <div class="order-header">
+            <div class="d-flex align-items-center">
+                <a th:href="@{/orders/list}" class="btn btn-outline-primary me-3">
+                    <i class="bi bi-arrow-left"></i> Back to Orders
+                </a>
+                <h2>Edit Order</h2>
+            </div>
+            <div>
+                <span class="badge bg-primary">Order #<span th:text="${order.id}"></span></span>
+            </div>
+        </div>
+
+        <form th:action="@{/orders/edit/{id}(id=${order.id})}" method="post" id="orderForm">
+            <div class="customer-info">
+                <h5>Customer Information</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <label class="form-label">Customer Name</label>
+                        <input type="text" class="form-control" th:value="${order.customer.name}" readonly>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Phone Number</label>
+                        <input type="text" class="form-control" th:value="${order.customer.phone}" readonly>
+                    </div>
+                </div>
+            </div>
+
+            <div class="order-items">
+                <h5>Order Items</h5>
+                <div id="orderItems">
+                    <div th:each="item : ${order.orderItems}" class="item-row">
+                        <div class="col-5">
+                            <div class="fw-medium" th:text="${item.menuItem.name}"></div>
+                            <div class="text-muted">₹<span th:text="${item.menuItem.price}"></span></div>
+                        </div>
+                        <div class="col-3">
+                            <div class="input-group">
+                                <button type="button" class="btn btn-outline-secondary" onclick="updateQuantity(this, -1)">-</button>
+                                <input type="number" th:name="'quantities[' + ${item.id} + ']'" 
+                                       th:value="${item.quantity}" class="form-control text-center" min="1">
+                                <button type="button" class="btn btn-outline-secondary" onclick="updateQuantity(this, 1)">+</button>
+                            </div>
+                        </div>
+                        <div class="col-3 text-end">
+                            <div class="fw-medium">₹<span class="item-total" th:text="${item.menuItem.price * item.quantity}"></span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="total-section">
+                <div class="row">
+                    <div class="col-md-6 offset-md-6">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal:</span>
+                            <span id="subtotal">₹<span th:text="${order.totalAmount}"></span></span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Tax (5%):</span>
+                            <span id="tax">₹<span th:text="${order.totalAmount * 0.05}"></span></span>
+                        </div>
+                        <div class="d-flex justify-content-between fw-bold">
+                            <span>Total:</span>
+                            <span id="total">₹<span th:text="${order.totalAmount * 1.05}"></span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end mt-4">
+                <a th:href="@{/orders/list}" class="btn btn-outline-secondary me-2">Cancel</a>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function updateQuantity(btn, change) {
+            const input = btn.parentElement.querySelector('input');
+            let value = parseInt(input.value) + change;
+            if (value < 1) value = 1;
+            input.value = value;
+            updateTotals();
+        }
+
+        function updateTotals() {
+            let subtotal = 0;
+            const items = document.querySelectorAll('.item-row');
+            
+            items.forEach(item => {
+                const price = parseFloat(item.querySelector('.text-muted').textContent.replace('₹', ''));
+                const quantity = parseInt(item.querySelector('input[type="number"]').value);
+                const itemTotal = price * quantity;
+                item.querySelector('.item-total').textContent = itemTotal.toFixed(2);
+                subtotal += itemTotal;
+            });
+
+            const tax = subtotal * 0.05;
+            const total = subtotal + tax;
+
+            document.getElementById('subtotal').textContent = '₹' + subtotal.toFixed(2);
+            document.getElementById('tax').textContent = '₹' + tax.toFixed(2);
+            document.getElementById('total').textContent = '₹' + total.toFixed(2);
+        }
+
+        // Update totals when quantity changes
+        document.querySelectorAll('input[type="number"]').forEach(input => {
+            input.addEventListener('change', updateTotals);
+        });
+    </script>
+</body>
+</html>

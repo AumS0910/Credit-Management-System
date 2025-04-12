@@ -1,0 +1,259 @@
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+    body { 
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        font-family: 'Poppins', sans-serif;
+        min-height: 100vh;
+    }
+
+    .order-card {
+        max-width: 450px;
+        margin: 2rem auto;
+        border-radius: 24px;
+        box-shadow: 0 12px 24px rgba(0,0,0,0.08);
+        overflow: hidden;
+        animation: slideIn 0.5s ease-out;
+        background: white;
+        border: 1px solid rgba(255,255,255,0.1);
+        backdrop-filter: blur(10px);
+    }
+
+    .order-header {
+        padding: 1.5rem;
+        background: linear-gradient(to right, #4A90E2, #67B26F);
+        color: white;
+    }
+
+    .order-item {
+        display: grid;
+        grid-template-columns: 70px 1fr auto;
+        gap: 1.25rem;
+        padding: 1.25rem;
+        background: white;
+        align-items: center;
+        transition: all 0.3s ease;
+        border-bottom: 1px solid #f1f3f5;
+    }
+
+    .order-item:hover {
+        background: #f8f9fa;
+        transform: translateX(5px);
+    }
+
+    .item-image {
+        width: 70px;
+        height: 70px;
+        border-radius: 16px;
+        object-fit: cover;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+    }
+
+    .item-image:hover {
+        transform: scale(1.05);
+    }
+
+    .item-details {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+
+    .item-name {
+        font-weight: 600;
+        color: #2d3436;
+        font-size: 1.1rem;
+    }
+
+    .item-quantity {
+        font-size: 0.9rem;
+        color: #636e72;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .item-price {
+        color: #4A90E2;
+        font-weight: 500;
+    }
+
+    .item-total {
+        font-weight: 600;
+        color: #2d3436;
+        background: #f1f3f5;
+        padding: 0.5rem 1rem;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+
+    .item-total:hover {
+        background: #4A90E2;
+        color: white;
+        transform: scale(1.05);
+    }
+
+    .summary-section {
+        padding: 1.5rem;
+        background: #f8f9fa;
+        border-top: 2px dashed #e9ecef;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        color: #636e72;
+        transition: all 0.3s ease;
+    }
+
+    .summary-row:hover {
+        transform: translateX(5px);
+        color: #2d3436;
+    }
+
+    .total-row {
+        font-weight: 700;
+        color: #2d3436;
+        font-size: 1.2rem;
+        border-top: 2px solid #e9ecef;
+        margin-top: 0.75rem;
+        padding-top: 1rem;
+        background: linear-gradient(to right, #4A90E2, #67B26F);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .close-btn {
+        padding: 0.5rem;
+        border-radius: 50%;
+        transition: all 0.3s ease;
+        color: white;
+        opacity: 0.9;
+    }
+
+    .close-btn:hover {
+        background: rgba(255,255,255,0.2);
+        transform: rotate(90deg);
+        opacity: 1;
+    }
+
+    .customer-info p {
+        opacity: 0.9;
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
+    }
+
+    .customer-info span {
+        font-weight: 500;
+        letter-spacing: 0.5px;
+    }
+
+    @keyframes slideIn {
+        from {
+            transform: translateY(20px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .order-item {
+        animation: fadeIn 0.5s ease-out forwards;
+        animation-delay: calc(var(--order) * 0.1s);
+        opacity: 0;
+    }
+</style>
+
+<div class="container">
+    <div class="order-card">
+        <!-- Add these styles -->
+        <style>
+            .header-actions {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                margin-bottom: 1.5rem;
+            }
+        
+            .back-btn {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.6rem 1.2rem;
+                background: rgba(255,255,255,0.2);
+                border: 1px solid rgba(255,255,255,0.3);
+                border-radius: 12px;
+                color: white;
+                text-decoration: none;
+                transition: all 0.3s ease;
+                font-size: 0.9rem;
+            }
+        
+            .back-btn:hover {
+                background: rgba(255,255,255,0.3);
+                transform: translateX(-5px);
+                color: white;
+            }
+        
+            .back-btn i {
+                transition: transform 0.3s ease;
+            }
+        
+            .back-btn:hover i {
+                transform: translateX(-3px);
+            }
+        </style>
+        
+        <!-- Update the header section -->
+        <div class="order-header">
+            <div class="header-actions">
+                <a th:href="@{/orders/list}" class="back-btn">
+                    <i class="bi bi-arrow-left"></i>
+                    Back to Orders
+                </a>
+                <a th:href="@{/orders/list}" class="close-btn">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+            </div>
+            <div class="customer-info">
+                <p class="mb-1">Customer: <span th:text="${order.customer.name}" class="fw-medium"></span></p>
+                <p class="mb-1">Phone: <span th:text="${order.customer.phone}" class="fw-medium"></span></p>
+                <p class="mb-0">Date: <span th:text="${#temporals.format(order.orderDate, 'EEE dd MMM, yyyy')}" class="fw-medium"></span></p>
+            </div>
+        </div>
+
+        <div th:each="item : ${order.orderItems}" class="order-item">
+            <img th:src="${item.menuItem.imageUrl}" class="item-image" th:alt="${item.menuItem.name}">
+            <div class="item-details">
+                <span class="item-name" th:text="${item.menuItem.name}"></span>
+                <span class="item-quantity">Qty: <span th:text="${item.quantity}"></span></span>
+                <span class="item-price">₹<span th:text="${item.menuItem.price}"></span></span>
+            </div>
+            <span class="item-total">₹<span th:text="${item.menuItem.price * item.quantity}"></span></span>
+        </div>
+
+        <div class="summary-section">
+            <div class="summary-row">
+                <span>Subtotal</span>
+                <span>₹<span th:text="${#numbers.formatDecimal(order.totalAmount, 1, 2)}"></span></span>
+            </div>
+            <div class="summary-row">
+                <span>Tax (5%)</span>
+                <span>₹<span th:text="${#numbers.formatDecimal(order.totalAmount * 0.05, 1, 2)}"></span></span>
+            </div>
+            <div class="summary-row total-row">
+                <span>Total Amount</span>
+                <span>₹<span th:text="${#numbers.formatDecimal(order.totalAmount * 1.05, 1, 2)}"></span></span>
+            </div>
+        </div>
+    </div>
+</div>

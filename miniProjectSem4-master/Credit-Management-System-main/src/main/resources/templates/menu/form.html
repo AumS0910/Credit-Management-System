@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${menuItem.id == null ? 'Create Menu Item' : 'Edit Menu Item'} + ' - Restaurant Credit Management'"></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .required-field::after {
+            content: " *";
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div th:replace="fragments/header :: header"></div>
+
+    <div class="container mt-4">
+        <div class="row mb-3">
+            <div class="col">
+                <h2 th:text="${menuItem.id == null ? 'Create Menu Item' : 'Edit Menu Item'}"></h2>
+            </div>
+        </div>
+
+        <form th:action="@{${menuItem.id == null ? '/menu/create' : '/menu/edit/' + menuItem.id}}"
+              th:object="${menuItem}" method="post" class="needs-validation" novalidate>
+            
+            <div class="mb-3">
+                <label for="name" class="form-label required-field">Name</label>
+                <input type="text" class="form-control" id="name" th:field="*{name}" 
+                       required minlength="2" maxlength="255">
+                <div class="invalid-feedback">Please enter a name (minimum 2 characters).</div>
+            </div>
+
+            <div class="mb-3">
+                <label for="category" class="form-label required-field">Category</label>
+                <select class="form-select" id="category" th:field="*{category}" required>
+                    <option value="">Select Category</option>
+                    <option value="Starters">Starters</option>
+                    <option value="Main Course">Main Course</option>
+                    <option value="Breads">Breads</option>
+                    <option value="Desserts">Desserts</option>
+                    <option value="Beverages">Beverages</option>
+                </select>
+                <div class="invalid-feedback">Please select a category.</div>
+            </div>
+
+            <div class="mb-3">
+                <label for="price" class="form-label required-field">Price (₹)</label>
+                <input type="number" class="form-control" id="price" th:field="*{price}" 
+                       min="0" step="0.01" required>
+                <div class="invalid-feedback">Please enter a valid price (minimum 0).</div>
+            </div>
+
+            <div class="mb-3">
+                <label for="description" class="form-label">Description</label>
+                <textarea class="form-control" id="description" th:field="*{description}" 
+                          rows="3" maxlength="500"></textarea>
+                <div class="form-text">Maximum 500 characters</div>
+            </div>
+
+            <div class="mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="available" 
+                           th:field="*{available}" checked>
+                    <label class="form-check-label" for="available">
+                        Available
+                    </label>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <a href="/menu" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Form validation
+            $('form').on('submit', function(event) {
+                if (!this.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                $(this).addClass('was-validated');
+            });
+
+            // Price validation
+            $('#price').on('input', function() {
+                let value = $(this).val();
+                if (value < 0) {
+                    $(this).val(0);
+                }
+            });
+
+            // Initialize form with default values
+            if (!$('#available').is(':checked')) {
+                $('#available').prop('checked', true);
+            }
+        });
+    </script>
+</body>
+</html>

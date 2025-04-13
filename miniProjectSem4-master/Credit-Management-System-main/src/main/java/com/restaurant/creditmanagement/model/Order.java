@@ -1,11 +1,11 @@
 package com.restaurant.creditmanagement.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 import javax.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -17,9 +17,14 @@ public class Order {
     @SequenceGenerator(name = "order_seq", sequenceName = "order_sequence", allocationSize = 1)
     private Long id;
     
-    @ManyToOne
-    @JoinColumn(name = "customer_id", nullable = false)
+    @JsonIgnoreProperties({"orders", "hibernateLazyInitializer"})
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id")
     private Customer customer;
+    
+    @JsonIgnoreProperties("order")
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
+    private List<OrderItem> orderItems;
     
     private Long adminId;
     
@@ -31,8 +36,7 @@ public class Order {
     
     private String status;
     
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
-    private List<OrderItem> orderItems = new ArrayList<>();
+
 
     @Column
     private String paymentMethod;

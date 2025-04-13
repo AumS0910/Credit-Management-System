@@ -90,37 +90,7 @@ public class CustomerController {
         }
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<?> updateCustomer(@PathVariable Long id, @RequestBody Customer customer) {
-        try {
-            Long adminId = 1L; // TODO: Get this from security context
-            Optional<Customer> existingCustomerOpt = customerService.getCustomerById(id, adminId);
-            if (!existingCustomerOpt.isPresent()) {
-                return ResponseEntity.notFound().build();
-            }
-
-            Customer existingCustomer = existingCustomerOpt.get();
-            existingCustomer.setName(customer.getName());
-            existingCustomer.setPhone(customer.getPhone());
-            existingCustomer.setEmail(customer.getEmail());
-            existingCustomer.setAddress(customer.getAddress());
-
-            if (customer.getTotalCredit() != null &&
-                    customer.getTotalCredit().compareTo(existingCustomer.getTotalCredit()) != 0) {
-                if (customer.getTotalCredit().compareTo(existingCustomer.getCreditBalance()) < 0) {
-                    return ResponseEntity.badRequest()
-                            .body("New credit limit cannot be less than current balance");
-                }
-                existingCustomer.setTotalCredit(customer.getTotalCredit());
-            }
-
-            Customer updatedCustomer = customerService.updateCustomer(existingCustomer, adminId);
-            return ResponseEntity.ok(updatedCustomer);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to update customer: " + e.getMessage());
-        }
-    }
+    
 
     @PostMapping("/{id}/settle")
     public ResponseEntity<?> settleBalance(@PathVariable Long id,
@@ -150,6 +120,54 @@ public class CustomerController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Failed to process payment: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getCustomer(@PathVariable Long id, 
+                                       @RequestHeader("Admin-ID") String adminIdStr) {
+        try {
+            Long adminId = Long.parseLong(adminIdStr);
+            Optional<Customer> customer = customerService.getCustomerById(id, adminId);
+            return customer.map(ResponseEntity::ok)
+                    .orElse(ResponseEntity.notFound().build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error fetching customer: " + e.getMessage());
+        }
+    }
+
+    @PutMapping("/{id}/update")
+    public ResponseEntity<?> updateCustomer(@PathVariable Long id, 
+                                          @RequestBody Customer customer,
+                                          @RequestHeader("Admin-ID") String adminIdStr) {
+        try {
+            Long adminId = Long.parseLong(adminIdStr);
+            Optional<Customer> existingCustomerOpt = customerService.getCustomerById(id, adminId);
+            
+            if (!existingCustomerOpt.isPresent()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            Customer existingCustomer = existingCustomerOpt.get();
+            existingCustomer.setName(customer.getName());
+            existingCustomer.setPhone(customer.getPhone());
+            existingCustomer.setEmail(customer.getEmail());
+            existingCustomer.setAddress(customer.getAddress());
+
+            if (customer.getTotalCredit() != null) {
+                if (customer.getTotalCredit().compareTo(existingCustomer.getCreditBalance()) < 0) {
+                    return ResponseEntity.badRequest()
+                            .body("New credit limit cannot be less than current balance");
+                }
+                existingCustomer.setTotalCredit(customer.getTotalCredit());
+            }
+
+            Customer updatedCustomer = customerService.updateCustomer(existingCustomer, adminId);
+            return ResponseEntity.ok(updatedCustomer);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to update customer: " + e.getMessage());
         }
     }
 }

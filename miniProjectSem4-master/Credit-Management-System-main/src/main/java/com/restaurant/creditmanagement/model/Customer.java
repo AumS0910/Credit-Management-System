@@ -1,5 +1,6 @@
 package com.restaurant.creditmanagement.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import javax.persistence.*;
 import java.math.BigDecimal;
@@ -34,17 +35,15 @@ public class Customer {
     @Column(name = "credit_balance", nullable = false)
     private BigDecimal creditBalance = BigDecimal.ZERO;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    // Add a specific getter for creditBalance that never returns null
+    public BigDecimal getCreditBalance() {
+        return creditBalance != null ? creditBalance : BigDecimal.ZERO;
+    }
 
-    @Column(name = "admin_id", nullable = false)
-    private Long adminId;
-
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Transaction> transactions = new ArrayList<>();
-
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Order> orders = new ArrayList<>();
+    // Add a specific setter that handles null values
+    public void setCreditBalance(BigDecimal creditBalance) {
+        this.creditBalance = creditBalance != null ? creditBalance : BigDecimal.ZERO;
+    }
 
     @PrePersist
     protected void onCreate() {
@@ -58,6 +57,21 @@ public class Customer {
             creditBalance = BigDecimal.ZERO;
         }
     }
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "admin_id", nullable = false)
+    private Long adminId;
+
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Transaction> transactions = new ArrayList<>();
+
+    @JsonIgnoreProperties("customer")
+    @OneToMany(mappedBy = "customer")
+    private List<Order> orders;
+
+
 
     @Column(nullable = false, columnDefinition = "boolean default true")
     private boolean active = true;

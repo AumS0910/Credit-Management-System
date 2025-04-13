@@ -76,15 +76,102 @@ export default function CustomerListPage() {
     if (!confirm('Are you sure you want to delete this customer?')) return
 
     try {
+      const adminData = localStorage.getItem('adminData')
+      if (!adminData) {
+        router.push('/login')
+        return
+      }
+
+      const { id: adminId } = JSON.parse(adminData)
       const response = await fetch(`http://localhost:8080/customers/${id}/delete`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'Admin-ID': adminId.toString()
+        }
       })
 
       if (response.ok) {
         setCustomers(customers.filter(customer => customer.id !== id))
+      } else {
+        const data = await response.json()
+        alert(data || 'Failed to delete customer')
       }
     } catch (error) {
       console.error('Failed to delete customer:', error)
+      alert('Failed to delete customer')
+    }
+  }
+
+  const handleSettleBalance = async (customerId: number) => {
+    const customer = customers.find(c => c.id === customerId)
+    if (!customer) return
+
+    const amount = prompt(`Enter settlement amount (max: $${customer.creditBalance.toFixed(2)})`)
+    if (!amount) return
+
+    const settlementAmount = parseFloat(amount)
+    if (isNaN(settlementAmount) || settlementAmount <= 0 || settlementAmount > customer.creditBalance) {
+      alert('Invalid settlement amount')
+      return
+    }
+
+    try {
+      const adminData = localStorage.getItem('adminData')
+      if (!adminData) {
+        router.push('/login')
+        return
+      }
+
+      const { id: adminId } = JSON.parse(adminData)
+      const response = await fetch(`http://localhost:8080/customers/${customerId}/settle`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Admin-ID': adminId.toString()
+        },
+        body: JSON.stringify({
+          amount: settlementAmount,
+          notes: 'Balance settlement'
+        })
+      })
+
+      if (response.ok) {
+        // Refresh the customer list to show updated balance
+        fetchCustomers()
+      } else {
+        const data = await response.json()
+        alert(data || 'Failed to settle balance')
+      }
+    } catch (error) {
+      console.error('Failed to settle balance:', error)
+      alert('Failed to settle balance')
+    }
+  }
+
+  const handleEdit = async (customerId: number) => {
+    try {
+      const adminData = localStorage.getItem('adminData')
+      if (!adminData) {
+        router.push('/login')
+        return
+      }
+
+      const { id: adminId } = JSON.parse(adminData)
+      // First fetch the customer data
+      const response = await fetch(`http://localhost:8080/customers/${customerId}`, {
+        headers: {
+          'Admin-ID': adminId.toString()
+        }
+      })
+
+      if (response.ok) {
+        router.push(`/customers/edit/${customerId}`)
+      } else {
+        throw new Error('Failed to fetch customer data')
+      }
+    } catch (error) {
+      console.error('Failed to navigate to edit page:', error)
+      alert('Failed to open edit page')
     }
   }
 
@@ -173,7 +260,7 @@ export default function CustomerListPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => router.push(`/customers/${customer.id}/edit`)}
+                          onClick={() => handleEdit(customer.id)}
                         >
                           <RiEditLine className="h-4 w-4" />
                         </Button>
@@ -185,6 +272,16 @@ export default function CustomerListPage() {
                         >
                           <RiDeleteBinLine className="h-4 w-4" />
                         </Button>
+                        {customer.creditBalance > 0 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleSettleBalance(customer.id)}
+                            className="text-green-500 hover:text-green-700"
+                          >
+                            Settle
+                          </Button>
+                        )}
                       </div>
                     </td>
                   </motion.tr>

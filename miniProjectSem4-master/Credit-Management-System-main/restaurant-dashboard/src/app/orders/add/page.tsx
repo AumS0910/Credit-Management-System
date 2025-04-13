@@ -48,8 +48,6 @@ export default function AddOrderPage() {
     tax: "0", // Changed to string
   })
 
-  
-
   useEffect(() => {
     const selectedMenuItems = localStorage.getItem('selectedMenuItems')
     if (selectedMenuItems) {
@@ -130,6 +128,11 @@ export default function AddOrderPage() {
       console.error('Failed to fetch data:', error)
     }
   }
+
+  useEffect(() => {
+    fetchCustomersAndMenuItems()
+  }, [])
+  
   const addMenuItem = (menuItem: MenuItem) => {
     setSelectedItems(prev => {
       const existing = prev.find(item => item.menuItemId === menuItem.id)
@@ -184,24 +187,54 @@ export default function AddOrderPage() {
       const { id } = JSON.parse(adminData)
       const { total, tax } = calculateTotal()
 
-      const response = await fetch("http://localhost:8080/api/orders/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Admin-ID": id.toString()
-        },
-        body: JSON.stringify({
-          customerId: parseInt(formData.customerId),
-          menuItemIds: selectedItems.map(item => item.menuItemId),
-          quantities: selectedItems.map(item => item.quantity),
-          paymentMethod: formData.paymentMethod,
-          notes: formData.notes,
-          tax: tax,
-          totalAmount: total
-        })
-      })
+      // Check if payment method is CREDIT and validate credit balance
+      if (formData.paymentMethod === "CREDIT") {
+        const customer = customers.find(c => c.id === parseInt(formData.customerId))
+        if (!customer) {
+          setError("Customer not found")
+          return
+        }
+        if (customer.creditBalance < total) {
+          setError("Insufficient credit balance")
+          return
+        }
+      }
+
+      const response = await fetch("http://localhost:8080/api/orders", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Admin-ID": id.toString()
+            },
+            body: JSON.stringify({
+              customerId: parseInt(formData.customerId),
+              menuItemIds: selectedItems.map(item => item.menuItemId),
+              quantities: selectedItems.map(item => item.quantity),
+              paymentMethod: formData.paymentMethod,
+              notes: formData.notes,
+              tax: tax,
+              totalAmount: total
+            })
+          })
 
       if (response.ok) {
+        // If it's a credit payment, update the customer's credit balance
+        if (formData.paymentMethod === "CREDIT") {
+          const updateBalanceResponse = await fetch(`http://localhost:8080/customers/${formData.customerId}/update-balance`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Admin-ID": id.toString()
+            },
+            body: JSON.stringify({
+              amount: -total // Negative amount to decrease balance
+            })
+          })
+
+          if (!updateBalanceResponse.ok) {
+            console.error("Failed to update customer balance")
+          }
+        }
         router.push('/orders')
       } else {
         const data = await response.json()
@@ -243,221 +276,224 @@ export default function AddOrderPage() {
           </motion.p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Order Details Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-          >
-            <Card className="glass-card">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <RiShoppingBag3Line className="h-6 w-6 text-primary" />
-                  Order Details
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="customer">Customer</Label>
+        <form onSubmit={handleSubmit}>
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Order Details Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+            >
+              <Card className="glass-card">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <RiShoppingBag3Line className="h-6 w-6 text-primary" />
+                    Order Details
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
                   <div className="space-y-2">
+                    <Label htmlFor="customer">Customer</Label>
+                    <div className="space-y-2">
+                      <Select
+                        id="customer"
+                        value={formData.customerId}
+                        onChange={(e) => setFormData({ ...formData, customerId: e.target.value })}
+                        required
+                      >
+                        <option value="">Select a customer</option>
+                        {customers.map((customer) => (
+                          <option key={customer.id} value={customer.id}>
+                            {customer.name} - Balance: ${customer.creditBalance.toFixed(2)}
+                          </option>
+                        ))}
+                      </Select>
+                      {formData.customerId && customers.find(c => c.id === parseInt(formData.customerId)) && (
+                        <div className="text-sm text-muted-foreground">
+                          <p>Credit Balance: ${customers.find(c => c.id === parseInt(formData.customerId))?.creditBalance.toFixed(2)}</p>
+                          <p>Status: {customers.find(c => c.id === parseInt(formData.customerId))?.active ? 'Active' : 'Inactive'}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="paymentMethod">Payment Method</Label>
                     <Select
-                      id="customer"
-                      value={formData.customerId}
-                      onChange={(e) => setFormData({ ...formData, customerId: e.target.value })}
+                      id="paymentMethod"
+                      value={formData.paymentMethod}
+                      onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
                       required
                     >
-                      <option value="">Select a customer</option>
-                      {customers.map((customer) => (
-                        <option key={customer.id} value={customer.id}>
-                          {customer.name} - Balance: ${customer.creditBalance.toFixed(2)}
-                        </option>
-                      ))}
+                      <option value="CASH">Cash</option>
+                      <option value="CREDIT">Credit</option>
+                      <option value="CARD">Card</option>
                     </Select>
-                    {formData.customerId && customers.find(c => c.id === parseInt(formData.customerId)) && (
-                      <div className="text-sm text-muted-foreground">
-                        <p>Credit Balance: ${customers.find(c => c.id === parseInt(formData.customerId))?.creditBalance.toFixed(2)}</p>
-                        <p>Status: {customers.find(c => c.id === parseInt(formData.customerId))?.active ? 'Active' : 'Inactive'}</p>
-                      </div>
-                    )}
                   </div>
-                </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="paymentMethod">Payment Method</Label>
-                  <Select
-                    id="paymentMethod"
-                    value={formData.paymentMethod}
-                    onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
-                    required
-                  >
-                    <option value="CASH">Cash</option>
-                    <option value="CREDIT">Credit</option>
-                    <option value="CARD">Card</option>
-                  </Select>
-                </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="tax">Tax (%)</Label>
+                    <Input
+                      id="tax"
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.1"
+                      value={formData.tax}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setFormData({ ...formData, tax: value });
+                      }}
+                    />
+                  </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="tax">Tax (%)</Label>
-                  <Input
-                    id="tax"
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="0.1"
-                    value={formData.tax}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setFormData({ ...formData, tax: value });
-                    }}
-                  />
-                </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="notes">Notes</Label>
+                    <Textarea
+                      id="notes"
+                      placeholder="Add any special instructions..."
+                      value={formData.notes}
+                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="notes">Notes</Label>
-                  <Textarea
-                    id="notes"
-                    placeholder="Add any special instructions..."
-                    value={formData.notes}
-                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
+            {/* Menu Items Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.5 }}
+            >
+              <Card className="glass-card">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <RiShoppingBag3Line className="h-6 w-6 text-primary" />
+                    Menu Items
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {menuItems.map((item) => (
+                      <motion.div
+                        key={item.id}
+                        className="flex items-center gap-4 p-3 border rounded-lg hover:bg-gray-50"
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                      >
+                        <img
+                          src={item.imageUrl || '/placeholder-food.jpg'}
+                          alt={item.name}
+                          className="w-16 h-16 object-cover rounded-md"
+                        />
+                        <div className="flex-1">
+                          <h3 className="font-medium">{item.name}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            ${item.price.toFixed(2)}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {selectedItems.some(selected => selected.menuItemId === item.id) ? (
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => updateQuantity(item.id, -1)}
+                              >
+                                -
+                              </Button>
+                              <span className="w-8 text-center">
+                                {selectedItems.find(selected => selected.menuItemId === item.id)?.quantity || 0}
+                              </span>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => updateQuantity(item.id, 1)}
+                              >
+                                +
+                              </Button>
+                            </div>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => addMenuItem(item)}
+                            >
+                              Add
+                            </Button>
+                          )}
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
 
-          {/* Menu Items Section */}
+          {/* Remove the entire Selected Items Card section and replace with just the totals */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.5 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
           >
             <Card className="glass-card">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <RiShoppingBag3Line className="h-6 w-6 text-primary" />
-                  Menu Items
-                </CardTitle>
+                <CardTitle>Order Summary</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {menuItems.map((item) => (
-                    <motion.div
-                      key={item.id}
-                      className="flex items-center gap-4 p-3 border rounded-lg hover:bg-gray-50"
-                      whileHover={{ scale: 1.01 }}
-                      whileTap={{ scale: 0.99 }}
-                    >
-                      <img
-                        src={item.imageUrl || '/placeholder-food.jpg'}
-                        alt={item.name}
-                        className="w-16 h-16 object-cover rounded-md"
-                      />
-                      <div className="flex-1">
-                        <h3 className="font-medium">{item.name}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          ${item.price.toFixed(2)}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {selectedItems.some(selected => selected.menuItemId === item.id) ? (
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => updateQuantity(item.id, -1)}
-                            >
-                              -
-                            </Button>
-                            <span className="w-8 text-center">
-                              {selectedItems.find(selected => selected.menuItemId === item.id)?.quantity || 0}
-                            </span>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => updateQuantity(item.id, 1)}
-                            >
-                              +
-                            </Button>
-                          </div>
-                        ) : (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => addMenuItem(item)}
-                          >
-                            Add
-                          </Button>
-                        )}
-                      </div>
-                    </motion.div>
-                  ))}
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span>Subtotal</span>
+                    <span>${subtotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Tax ({formData.tax}%)</span>
+                    <span>${tax.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between font-semibold">
+                    <span>Total</span>
+                    <span>${total.toFixed(2)}</span>
+                  </div>
                 </div>
               </CardContent>
             </Card>
           </motion.div>
-        </div>
 
-        {/* Remove the entire Selected Items Card section and replace with just the totals */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.6 }}
-        >
-          <Card className="glass-card">
-            <CardHeader>
-              <CardTitle>Order Summary</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span>Subtotal</span>
-                  <span>${subtotal.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Tax ({formData.tax}%)</span>
-                  <span>${tax.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between font-semibold">
-                  <span>Total</span>
-                  <span>${total.toFixed(2)}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-red-500 text-sm text-center"
+            >
+              {error}
+            </motion.div>
+          )}
 
-        {error && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
+            className="flex gap-4"
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-red-500 text-sm text-center"
+            transition={{ duration: 0.5, delay: 0.7 }}
           >
-            {error}
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1"
+              onClick={() => router.back()}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              className="flex-1"
+              disabled={loading || selectedItems.length === 0 || !formData.customerId}
+            >
+              {loading ? "Creating..." : "Create Order"}
+            </Button>
           </motion.div>
-        )}
-
-        <motion.div
-          className="flex gap-4"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.7 }}
-        >
-          <Button
-            variant="outline"
-            className="flex-1"
-            onClick={() => router.back()}
-          >
-            Cancel
-          </Button>
-          <Button
-            className="flex-1"
-            onClick={handleSubmit}
-            disabled={loading || selectedItems.length === 0 || !formData.customerId}
-          >
-            {loading ? "Creating..." : "Create Order"}
-          </Button>
-        </motion.div>
+        </form>
       </motion.div>
     </div>
   )

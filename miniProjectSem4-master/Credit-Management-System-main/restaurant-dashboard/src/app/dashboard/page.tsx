@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { RiMoneyDollarCircleLine, RiShoppingBag3Line, RiGroupLine, RiUserAddLine, RiRestaurantLine } from "react-icons/ri"
 import { StatisticCard } from "@/components/statistic-card"
 import { RecentOrders } from "@/components/recent-orders"
-import { RecentCustomers } from "@/components/recent-customers"  // Add this import
+import { RecentCustomers } from "@/components/recent-customers"
 import { PopularItems } from "@/components/popular-items"
 import { useRouter } from "next/navigation"
 
@@ -285,3 +285,5 @@ export default function DashboardPage() {
     </div>
   )
 }
+
+// Remove the RecentOrders component definition from the bottom of this file

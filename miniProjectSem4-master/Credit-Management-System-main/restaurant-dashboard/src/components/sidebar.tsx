@@ -33,7 +33,7 @@ const sidebarItems = [
   {
     title: "Orders",
     icon: RiShoppingBag3Line,
-    href: "/dashboard/orders",
+    href: "/orders/list",
   },
   {
     title: "Analytics",

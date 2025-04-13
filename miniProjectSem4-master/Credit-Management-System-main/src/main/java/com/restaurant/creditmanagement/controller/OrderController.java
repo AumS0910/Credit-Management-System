@@ -59,14 +59,14 @@ public class OrderController {
     */
 
     @GetMapping("/create")  // Changed from /orders/create to just /create
-    public String showCreateOrderForm(@RequestParam(required = false) Long menuItemId, 
-                                    Model model, 
-                                    HttpSession session) {
+    public String showCreateOrderForm(@RequestParam(required = false) Long menuItemId,
+                                      Model model,
+                                      HttpSession session) {
         Long adminId = (Long) session.getAttribute("adminId");
         if (adminId == null) {
             return "redirect:/login";
         }
-        
+
         model.addAttribute("customers", customerService.getAllCustomers(adminId));
         model.addAttribute("menuItems", menuItemService.getAllMenuItems(adminId));
         model.addAttribute("selectedMenuItemId", menuItemId);
@@ -75,23 +75,23 @@ public class OrderController {
 
     @PostMapping("/create")
     public String createOrder(@RequestParam("customerId") Long customerId,
-                             @RequestParam("menuItemIds[]") List<Long> menuItemIds,
-                             @RequestParam("quantities[]") List<Integer> quantities,
-                             @RequestParam("paymentMethod") String paymentMethod,
-                             @RequestParam("notes") String notes,
-                             @RequestParam("tax") BigDecimal tax,
-                             @RequestParam("totalAmount") BigDecimal totalAmount,
-                             HttpSession session,
-                             RedirectAttributes redirectAttributes) {
+                              @RequestParam("menuItemIds[]") List<Long> menuItemIds,
+                              @RequestParam("quantities[]") List<Integer> quantities,
+                              @RequestParam("paymentMethod") String paymentMethod,
+                              @RequestParam("notes") String notes,
+                              @RequestParam("tax") BigDecimal tax,
+                              @RequestParam("totalAmount") BigDecimal totalAmount,
+                              HttpSession session,
+                              RedirectAttributes redirectAttributes) {
         try {
             Long adminId = (Long) session.getAttribute("adminId");
             if (adminId == null) {
                 return "redirect:/login";
             }
-    
+
             Customer customer = customerService.getCustomerById(customerId, adminId)
                     .orElseThrow(() -> new IllegalArgumentException("Customer not found"));
-            
+
             Order order = new Order();
             order.setAdminId(adminId);
             order.setCustomer(customer);
@@ -101,7 +101,7 @@ public class OrderController {
             order.setTotalAmount(totalAmount);
             order.setOrderDate(LocalDateTime.now());
             order.setStatus("PENDING");
-            
+
             // Update customer's credit balance if payment method is Credit
             if ("Credit".equalsIgnoreCase(paymentMethod)) {
                 // Ensure creditBalance is initialized
@@ -112,13 +112,13 @@ public class OrderController {
                 BigDecimal newBalance = currentBalance.add(totalAmount);
                 customer.setCreditBalance(newBalance);
                 customerService.updateCustomer(customer, adminId);
-                
+
                 // Debug log
                 System.out.println("Updated customer credit balance: " + newBalance);
             }
-            
+
             Order savedOrder = orderService.createOrder(order, menuItemIds, quantities);
-            
+
             redirectAttributes.addFlashAttribute("success", "Order created successfully!");
             return "redirect:/orders/list";
         } catch (Exception e) {
@@ -135,7 +135,7 @@ public class OrderController {
         if (adminId == null) {
             return "redirect:/login";
         }
-    
+
         List<Order> orders = orderService.getOrdersByAdminId(adminId);
         model.addAttribute("orders", orders);
         return "orders/list";
@@ -156,9 +156,9 @@ public class OrderController {
     }
 
     @PostMapping("/edit/{id}")
-    public String updateOrder(@PathVariable Long id, 
-                            @RequestParam Map<String, String> quantities,
-                            RedirectAttributes redirectAttributes) {
+    public String updateOrder(@PathVariable Long id,
+                              @RequestParam Map<String, String> quantities,
+                              RedirectAttributes redirectAttributes) {
         try {
             orderService.updateOrderQuantities(id, quantities);
             redirectAttributes.addFlashAttribute("success", "Order updated successfully");
@@ -183,16 +183,16 @@ public class OrderController {
     @PostMapping("/api/orders/create")
     @ResponseBody
     public ResponseEntity<?> createOrderApi(@RequestBody OrderRequest orderRequest,
-                                        HttpSession session) {
+                                            HttpSession session) {
         try {
             Long adminId = (Long) session.getAttribute("adminId");
             if (adminId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Not authenticated");
             }
-    
+
             Customer customer = customerService.getCustomerById(orderRequest.getCustomerId(), adminId)
                     .orElseThrow(() -> new IllegalArgumentException("Customer not found"));
-            
+
             Order order = new Order();
             order.setAdminId(adminId);
             order.setCustomer(customer);
@@ -202,24 +202,24 @@ public class OrderController {
             order.setTotalAmount(orderRequest.getTotalAmount());
             order.setOrderDate(LocalDateTime.now());
             order.setStatus("PENDING");
-            
+
             if ("CREDIT".equalsIgnoreCase(orderRequest.getPaymentMethod())) {
-                BigDecimal currentBalance = customer.getCreditBalance() != null ? 
-                    customer.getCreditBalance() : BigDecimal.ZERO;
+                BigDecimal currentBalance = customer.getCreditBalance() != null ?
+                        customer.getCreditBalance() : BigDecimal.ZERO;
                 customer.setCreditBalance(currentBalance.add(orderRequest.getTotalAmount()));
                 customerService.updateCustomer(customer, adminId);
             }
-            
-            Order savedOrder = orderService.createOrder(order, 
-                orderRequest.getMenuItemIds(), 
-                orderRequest.getQuantities());
-            
+
+            Order savedOrder = orderService.createOrder(order,
+                    orderRequest.getMenuItemIds(),
+                    orderRequest.getQuantities());
+
             return ResponseEntity.ok(savedOrder);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-    
+
     // Add this class at the bottom of the file
     @Data
     class OrderRequest {

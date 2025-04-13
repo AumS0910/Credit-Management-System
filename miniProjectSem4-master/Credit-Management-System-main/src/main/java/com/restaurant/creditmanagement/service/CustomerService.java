@@ -39,33 +39,33 @@ public class CustomerService {
         Optional<Customer> customerOpt = customerRepository.findById(id);
         if (customerOpt.isPresent()) {
             Customer customer = customerOpt.get();
-            
+
             if (customer.getCreditBalance().compareTo(BigDecimal.ZERO) > 0) {
                 throw new RuntimeException("Cannot delete customer with outstanding balance");
             }
-            
+
             customer.getTransactions().clear();
             customer.getOrders().clear();
             customerRepository.delete(customer);
-            
+
             // Reset sequence
             Long maxId = (Long) entityManager.createQuery("SELECT COALESCE(MAX(c.id), 0) FROM Customer c")
-                .getSingleResult();
-            
+                    .getSingleResult();
+
             if (maxId == 0) {
                 entityManager.createNativeQuery("ALTER SEQUENCE customer_sequence RESTART WITH 1")
-                    .executeUpdate();
+                        .executeUpdate();
             } else {
                 List<Long> gaps = entityManager.createQuery(
-                    "SELECT m.id + 1 FROM (SELECT c.id, LEAD(c.id) OVER (ORDER BY c.id) AS next_id " +
-                    "FROM Customer c) m WHERE m.next_id - m.id > 1 AND m.id + 1 <= :maxId", Long.class)
-                    .setParameter("maxId", maxId)
-                    .getResultList();
-                
+                                "SELECT m.id + 1 FROM (SELECT c.id, LEAD(c.id) OVER (ORDER BY c.id) AS next_id " +
+                                        "FROM Customer c) m WHERE m.next_id - m.id > 1 AND m.id + 1 <= :maxId", Long.class)
+                        .setParameter("maxId", maxId)
+                        .getResultList();
+
                 Long nextId = gaps.isEmpty() ? maxId + 1 : gaps.get(0);
                 entityManager.createNativeQuery("ALTER SEQUENCE customer_sequence RESTART WITH :nextId")
-                    .setParameter("nextId", nextId)
-                    .executeUpdate();
+                        .setParameter("nextId", nextId)
+                        .executeUpdate();
             }
         }
     }

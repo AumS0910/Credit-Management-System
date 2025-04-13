@@ -75,7 +75,7 @@ public class CustomerController {
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Error deleting customer: " + e.getMessage());
+                    .body("Error deleting customer: " + e.getMessage());
         }
     }
 
@@ -98,33 +98,33 @@ public class CustomerController {
             if (!existingCustomerOpt.isPresent()) {
                 return ResponseEntity.notFound().build();
             }
-            
+
             Customer existingCustomer = existingCustomerOpt.get();
             existingCustomer.setName(customer.getName());
             existingCustomer.setPhone(customer.getPhone());
             existingCustomer.setEmail(customer.getEmail());
             existingCustomer.setAddress(customer.getAddress());
-            
-            if (customer.getTotalCredit() != null && 
-                customer.getTotalCredit().compareTo(existingCustomer.getTotalCredit()) != 0) {
+
+            if (customer.getTotalCredit() != null &&
+                    customer.getTotalCredit().compareTo(existingCustomer.getTotalCredit()) != 0) {
                 if (customer.getTotalCredit().compareTo(existingCustomer.getCreditBalance()) < 0) {
                     return ResponseEntity.badRequest()
-                        .body("New credit limit cannot be less than current balance");
+                            .body("New credit limit cannot be less than current balance");
                 }
                 existingCustomer.setTotalCredit(customer.getTotalCredit());
             }
-            
+
             Customer updatedCustomer = customerService.updateCustomer(existingCustomer, adminId);
             return ResponseEntity.ok(updatedCustomer);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Failed to update customer: " + e.getMessage());
+                    .body("Failed to update customer: " + e.getMessage());
         }
     }
 
     @PostMapping("/{id}/settle")
     public ResponseEntity<?> settleBalance(@PathVariable Long id,
-                                         @RequestBody Transaction transaction) {
+                                           @RequestBody Transaction transaction) {
         try {
             Long adminId = 1L; // TODO: Get this from security context
             Customer customer = customerService.getCustomerById(id, adminId)
@@ -132,7 +132,7 @@ public class CustomerController {
 
             if (transaction.getAmount().compareTo(customer.getCreditBalance()) > 0) {
                 return ResponseEntity.badRequest()
-                    .body("Settlement amount cannot exceed outstanding balance");
+                        .body("Settlement amount cannot exceed outstanding balance");
             }
 
             BigDecimal newBalance = customer.getCreditBalance().subtract(transaction.getAmount());
@@ -149,7 +149,7 @@ public class CustomerController {
             return ResponseEntity.ok(savedTransaction);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Failed to process payment: " + e.getMessage());
+                    .body("Failed to process payment: " + e.getMessage());
         }
     }
 }

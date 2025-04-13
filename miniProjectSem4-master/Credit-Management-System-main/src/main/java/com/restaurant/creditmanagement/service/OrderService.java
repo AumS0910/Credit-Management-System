@@ -1,29 +1,32 @@
 package com.restaurant.creditmanagement.service;
 
-import com.restaurant.creditmanagement.model.*;
-
+import com.restaurant.creditmanagement.model.Order;
+import com.restaurant.creditmanagement.model.OrderItem;
 import com.restaurant.creditmanagement.repository.OrderItemRepository;
 import com.restaurant.creditmanagement.repository.OrderRepository;
-import com.restaurant.creditmanagement.repository.CustomerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import javax.transaction.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 public class OrderService {
+
     @Autowired
     private OrderRepository orderRepository;
-    
+
+    public BigDecimal calculateTotalRevenue(Long adminId) {
+        List<Order> orders = orderRepository.findByAdminId(adminId);
+        return orders.stream()
+                .map(Order::getTotalAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
     @Autowired
     private MenuItemService menuItemService;
 
@@ -110,4 +113,6 @@ public class OrderService {
         order.setTotalAmount(totalAmount);
         orderRepository.save(order);
     }
+
+
 }

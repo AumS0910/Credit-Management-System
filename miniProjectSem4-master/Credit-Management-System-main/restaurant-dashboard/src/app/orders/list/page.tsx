@@ -57,12 +57,47 @@ export default function OrderListPage() {
     }
   }
 
+  const handleEdit = async (orderId: number) => {
+    try {
+      const adminData = localStorage.getItem('adminData')
+      if (!adminData) {
+        router.push('/login')
+        return
+      }
+      const { id } = JSON.parse(adminData)
+
+      // First fetch the order details
+      const response = await fetch(`http://localhost:8080/api/orders/${orderId}`, {
+        headers: {
+          "Content-Type": "application/json",
+          "Admin-ID": id.toString()
+        }
+      })
+
+      if (response.ok) {
+        const orderData = await response.json()
+        // Store order data in localStorage
+        localStorage.setItem('editOrder', JSON.stringify(orderData))
+        // Navigate to edit page
+        window.location.href = `/orders/edit/${orderId}`
+      } else {
+        setError("Failed to fetch order details")
+      }
+    } catch (error) {
+      console.error("Navigation error:", error)
+      setError("Failed to navigate to edit page")
+    }
+  }
+
   const handleDelete = async (orderId: number) => {
     if (!confirm("Are you sure you want to delete this order?")) return
 
     try {
       const adminData = localStorage.getItem('adminData')
-      if (!adminData) return
+      if (!adminData) {
+        router.push('/login')
+        return
+      }
       const { id } = JSON.parse(adminData)
 
       const response = await fetch(`http://localhost:8080/api/orders/${orderId}`, {
@@ -76,7 +111,8 @@ export default function OrderListPage() {
       if (response.ok) {
         setOrders(orders.filter(order => order.id !== orderId))
       } else {
-        setError("Failed to delete order")
+        const errorData = await response.json()
+        setError(errorData.message || "Failed to delete order")
       }
     } catch (error) {
       setError("An error occurred while deleting the order")
@@ -196,14 +232,7 @@ export default function OrderListPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => router.push(`/orders/${order.id}`)}
-                        >
-                          <RiEyeLine className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => router.push(`/orders/edit/${order.id}`)}
+                          onClick={() => handleEdit(order.id)}
                         >
                           <RiEditLine className="h-4 w-4" />
                         </Button>

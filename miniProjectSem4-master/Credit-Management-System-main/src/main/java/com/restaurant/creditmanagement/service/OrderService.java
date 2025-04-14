@@ -114,5 +114,19 @@ public class OrderService {
         orderRepository.save(order);
     }
 
+    @Transactional
+    public Order updateOrder(Order order) {
+        if (order.getId() == null) {
+            throw new IllegalArgumentException("Order ID cannot be null");
+        }
+        
+        // Verify order exists
+        Order existingOrder = getOrderById(order.getId());
+        if (existingOrder == null) {
+            throw new IllegalArgumentException("Order not found");
+        }
 
+        // Save the updated order
+        return orderRepository.save(order);
+    }
 }

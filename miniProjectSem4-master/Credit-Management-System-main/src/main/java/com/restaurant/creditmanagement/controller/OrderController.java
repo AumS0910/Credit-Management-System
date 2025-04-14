@@ -120,6 +120,27 @@ public class OrderController {
         }
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateOrder(@PathVariable Long id,
+                                       @RequestBody Order updatedOrder,
+                                       @RequestHeader("Admin-ID") Long adminId) {
+        try {
+            Order existingOrder = orderService.getOrderById(id);
+            if (!existingOrder.getAdminId().equals(adminId)) {
+                return ResponseEntity.notFound().build();
+            }
+
+            // Update only allowed fields
+            existingOrder.setStatus(updatedOrder.getStatus());
+            existingOrder.setPaymentMethod(updatedOrder.getPaymentMethod());
+            existingOrder.setNotes(updatedOrder.getNotes());
+
+            Order savedOrder = orderService.updateOrder(existingOrder);
+            return ResponseEntity.ok(savedOrder);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
     @Data
     static class OrderRequest {
         private Long customerId;

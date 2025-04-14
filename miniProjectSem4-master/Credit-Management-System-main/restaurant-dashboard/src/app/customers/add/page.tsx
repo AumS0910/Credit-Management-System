@@ -46,7 +46,8 @@ export default function AddCustomerPage() {
       })
 
       if (response.ok) {
-        router.push('/customers')
+        // Change this line to use the correct path
+        router.push('/customers/list')  // Modified this line
       } else {
         const data = await response.json()
         setError(data.message || "Failed to add customer")

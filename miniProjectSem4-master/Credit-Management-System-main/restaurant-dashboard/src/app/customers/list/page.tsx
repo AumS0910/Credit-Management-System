@@ -123,7 +123,7 @@ export default function CustomerListPage() {
       }
 
       const { id: adminId } = JSON.parse(adminData)
-      const response = await fetch(`http://localhost:8080/customers/${customerId}/settle`, {
+      const response = await fetch(`http://localhost:8080/api/customers/${customerId}/settle`, {  // Updated endpoint
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -131,20 +131,24 @@ export default function CustomerListPage() {
         },
         body: JSON.stringify({
           amount: settlementAmount,
-          notes: 'Balance settlement'
+          notes: 'Balance settlement',
+          adminId: adminId  // Added adminId to request body
         })
       })
 
       if (response.ok) {
-        // Refresh the customer list to show updated balance
-        fetchCustomers()
+        const updatedCustomer = await response.json()
+        setCustomers(customers.map(c => 
+          c.id === customerId ? { ...c, creditBalance: updatedCustomer.creditBalance } : c
+        ))
+        alert('Balance settled successfully')
       } else {
-        const data = await response.json()
-        alert(data || 'Failed to settle balance')
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Failed to settle balance')
       }
     } catch (error) {
       console.error('Failed to settle balance:', error)
-      alert('Failed to settle balance')
+      alert(error instanceof Error ? error.message : 'Failed to settle balance')
     }
   }
 

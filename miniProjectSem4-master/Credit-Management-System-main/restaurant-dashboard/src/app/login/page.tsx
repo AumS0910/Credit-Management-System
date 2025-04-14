@@ -1,159 +1,233 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useRouter } from "next/navigation"
-import { RiRestaurantLine } from "react-icons/ri"
+import React, { useState } from 'react'
+import { FaFacebookF, FaGooglePlusG, FaLinkedinIn, FaUser, FaLock, FaEnvelope } from 'react-icons/fa'
+import { useRouter } from 'next/navigation'
+import styles from './login.module.css'
 
-const images = [
-  "/images/restaurant 1.jpg",  // Add your restaurant images
-  "/images/restaurant 2.jpg",  // in the public folder
-  "/images/restaurant 3.jpg",
-]
-
-export default function LoginPage() {
-  const [username, setUsername] = useState("")
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
-  const [currentImage, setCurrentImage] = useState(0)
+const LoginPage: React.FC = () => {
   const router = useRouter()
+  const [isRightPanelActive, setIsRightPanelActive] = useState(false)
+  const [showForgot, setShowForgot] = useState(false)
+  const [isLeftPanelActive, setIsLeftPanelActive] = useState(false)
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentImage((prev) => (prev >= 2 ? 0 : prev + 1))
-    }, 3000)
+  // Form states
+  const [registerData, setRegisterData] = useState({
+    name: '',
+    username: '',
+    password: ''
+  })
 
-    return () => clearInterval(timer)
-  }, [])
+  const [loginData, setLoginData] = useState({
+    username: '',
+    password: ''
+  })
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const [error, setError] = useState('')
+
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      const response = await fetch("http://localhost:8080/api/login", {
-        method: "POST",
+      const response = await fetch('http://localhost:8080/api/register', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify(registerData),
       })
 
       const data = await response.json()
 
       if (response.ok) {
+        setIsRightPanelActive(false) // Switch to login panel
+        setError('')
+      } else {
+        setError(data.error || 'Registration failed')
+      }
+    } catch (err) {
+      setError('Registration failed. Please try again.')
+    }
+  }
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      const response = await fetch('http://localhost:8080/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(loginData),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        // Store token and admin data
+        localStorage.setItem('token', data.token)
         localStorage.setItem('adminData', JSON.stringify({
           id: data.id,
-          username: data.username,
-          name: data.name
+          username: data.username
         }))
-        
-        if (data.token) {
-          localStorage.setItem('token', data.token)
-        }
-        
-        router.push('/dashboard')
+        router.push('/dashboard') // Redirect to dashboard
       } else {
-        setError(data.error || "Invalid credentials")
+        setError(data.error || 'Login failed')
       }
-    } catch (error) {
-      setError("An error occurred. Please try again.")
+    } catch (err) {
+      setError('Login failed. Please try again.')
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="flex w-full max-w-4xl h-[600px]"> {/* Increased height */}
-        {/* Image Slider Section */}
-        <div className="hidden lg:block w-1/2 relative overflow-hidden rounded-l-lg">
-          <AnimatePresence initial={false}>
-            <motion.img
-              key={currentImage}
-              src={images[currentImage]}
-              alt="Restaurant"
-              className="h-full w-full object-cover"
-              initial={{ opacity: 0, x: 100 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -100 }}
-              transition={{ duration: 0.5 }}
-            />
-          </AnimatePresence>
-          <div className="absolute inset-0 bg-black/40 flex items-end justify-center pb-8"> {/* Changed to items-end and added padding bottom */}
-            <div className="text-white text-center">
-              <h1 className="text-2xl font-bold mb-2">Welcome to Our Restaurant</h1>
-              <p className="text-sm">Manage your restaurant with ease</p>
+    <main className={styles.loginBody}>
+      <div className={`${styles.container} ${isRightPanelActive ? styles.rightPanelActive : ''} ${isLeftPanelActive ? styles.leftPanelActive : ''}`}>
+        <div className={`${styles.formContainer} ${styles.signUpContainer}`}>
+          <form className={styles.loginForm} onSubmit={handleRegister}>
+            <h1 className={styles.heading1}>Create Account</h1>
+            {error && <p className="text-red-500 text-sm">{error}</p>}
+            <div className={styles.socialContainer}>
+              <a href="#" className={styles.link}><FaFacebookF /></a>
+              <a href="#" className={styles.link}><FaGooglePlusG /></a>
+              <a href="#" className={styles.link}><FaLinkedinIn /></a>
+            </div>
+            <span className={styles.textSpan}>or use your email for registration</span>
+            <div className={styles.accountInput}>
+              <FaUser className="text-gray-500" />
+              <input 
+                className={styles.input}
+                type="text" 
+                placeholder="Name" 
+                value={registerData.name}
+                onChange={(e) => setRegisterData({...registerData, name: e.target.value})}
+              />
+            </div>
+            <div className="account-input">
+              <FaEnvelope className="text-gray-500" />
+              <input 
+                type="text" 
+                placeholder="Username" 
+                value={registerData.username}
+                onChange={(e) => setRegisterData({...registerData, username: e.target.value})}
+              />
+            </div>
+            <div className="account-input">
+              <FaLock className="text-gray-500" />
+              <input 
+                type="password" 
+                placeholder="Password" 
+                value={registerData.password}
+                onChange={(e) => setRegisterData({...registerData, password: e.target.value})}
+              />
+            </div>
+            <button className={styles.button} type="submit">Sign Up</button>
+          </form>
+        </div>
+
+        <div className={`${styles.formContainer} ${styles.signInContainer}`}>
+          <form className={styles.loginForm} onSubmit={handleLogin}>
+            <div 
+              className={showForgot ? styles.show : styles.hide} 
+              id={styles.forgot}
+              style={{ 
+                transition: 'all 0.5s ease-in-out',
+                transform: showForgot ? 'translateY(0)' : 'translateY(-100%)',
+                opacity: showForgot ? 1 : 0 
+              }}
+            >
+              <div className={styles.enterEmail}>
+                <div className={styles.enterEmailDetail}>
+                  <h1 className={styles.heading1}>Do you forgot?</h1>
+                  <p className={styles.paragraph}>Just enter your email to retrieve your password</p>
+                  <div className={styles.accountInput}>
+                    <FaEnvelope className="text-gray-500" />
+                    <input className={styles.input} type="email" placeholder="Email" />
+                  </div>
+                  <div>
+                    <button className={styles.button}>Send</button>
+                    <p onClick={() => slideAnimation(false)} className="cursor-pointer">
+                      <u>close</u>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h1>Sign in</h1>
+            {error && <p className="text-red-500 text-sm">{error}</p>}
+            <div className="social-container">
+              <a href="#" className="social"><FaFacebookF /></a>
+              <a href="#" className="social"><FaGooglePlusG /></a>
+              <a href="#" className="social"><FaLinkedinIn /></a>
+            </div>
+            <span>or use your account</span>
+            <div className="account-input">
+              <FaEnvelope className="text-gray-500" />
+              <input 
+                type="text" 
+                placeholder="Username" 
+                value={loginData.username}
+                onChange={(e) => setLoginData({...loginData, username: e.target.value})}
+              />
+            </div>
+            <div className="account-input">
+              <FaLock className="text-gray-500" />
+              <input 
+                type="password" 
+                placeholder="Password" 
+                value={loginData.password}
+                onChange={(e) => setLoginData({...loginData, password: e.target.value})}
+              />
+            </div>
+            <p 
+              className={styles.forgotButton}
+              onClick={() => {
+                slideAnimation(true)
+                setIsLeftPanelActive(true)
+              }}
+            >
+              Forgot your password?
+            </p>
+            <button className={styles.button}>Sign In</button>
+          </form>
+        </div>
+
+        <div className={styles.overlayContainer}>
+          <div className={styles.overlay}>
+            <div className={styles.square}></div>
+            <div className={styles.triangle}></div>
+            <div className={styles.circle}></div>
+            <div className={styles.square2}></div>
+            <div className={styles.triangle2}></div>
+            
+            <div className={`${styles.overlayPanel} ${styles.overlayLeft}`}>
+              <h1 className={styles.heading1}>Welcome Back!</h1>
+              <p className={styles.paragraph}>To keep connected with us please login with your personal info</p>
+              <button 
+                className={`${styles.button} ${styles.ghostButton}`}
+                onClick={() => {
+                  setIsRightPanelActive(false)
+                  setIsLeftPanelActive(false)
+                }}
+              >
+                Sign In
+              </button>
+            </div>
+
+            <div className={`${styles.overlayPanel} ${styles.overlayRight}`}>
+              <h1 className={styles.heading1}>Hello, Friend!</h1>
+              <p className={styles.paragraph}>Enter your personal details and start journey with us</p>
+              <button 
+                className={`${styles.button} ${styles.ghostButton}`}
+                onClick={() => setIsRightPanelActive(true)}
+              >
+                Sign Up
+              </button>
             </div>
           </div>
         </div>
-
-        {/* Login Form Section */}
-        <motion.div 
-          className="w-full lg:w-1/2 h-full" 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <Card className="glass-card border-0 shadow-2xl rounded-lg lg:rounded-l-none h-full"> {/* Added h-full */}
-            <CardHeader className="space-y-1 text-center">
-              <div className="flex justify-center mb-4">
-                <RiRestaurantLine className="h-12 w-12 text-primary" />
-              </div>
-              <CardTitle className="text-3xl font-bold">Welcome Back</CardTitle>
-              <p className="text-muted-foreground">Enter your credentials to continue</p>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                    Username
-                  </label>
-                  <input
-                    type="text"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    placeholder="Enter your username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                    Password
-                  </label>
-                  <input
-                    type="password"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                </div>
-                {error && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="text-red-500 text-sm text-center"
-                  >
-                    {error}
-                  </motion.div>
-                )}
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="w-full h-10 px-4 py-2 bg-primary text-primary-foreground rounded-md font-medium hover:bg-primary/90 transition-colors"
-                  type="submit"
-                >
-                  Sign In
-                </motion.button>
-                <p className="text-center text-sm text-muted-foreground">
-                  Don't have an account?{" "}
-                  <a href="/register" className="text-primary hover:underline">
-                    Register
-                  </a>
-                </p>
-              </form>
-            </CardContent>
-          </Card>
-        </motion.div>
       </div>
-    </div>
-  )
-}
+    </main>
+  );
+};
+
+export default LoginPage;

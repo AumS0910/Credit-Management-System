@@ -56,8 +56,19 @@ public class OrderController {
             if ("CREDIT".equalsIgnoreCase(orderRequest.getPaymentMethod())) {
                 BigDecimal currentBalance = customer.getCreditBalance() != null ?
                         customer.getCreditBalance() : BigDecimal.ZERO;
-                customer.setCreditBalance(currentBalance.subtract(orderRequest.getTotalAmount()));
+                BigDecimal orderAmount = orderRequest.getTotalAmount();
+                BigDecimal creditLimit = customer.getTotalCredit();
+
+                // Check if new total balance would exceed credit limit
+                BigDecimal newBalance = currentBalance.add(orderAmount);
+                if (newBalance.compareTo(creditLimit) > 0) {
+                    return ResponseEntity.badRequest().body("Total credit balance would exceed credit limit");
+                }
+
+                // Update customer's credit balance
+                customer.setCreditBalance(newBalance);
                 customerService.updateCustomer(customer, adminId);
+                order.setStatus("COMPLETED"); // Mark credit orders as completed
             }
 
             Order savedOrder = orderService.createOrder(order,

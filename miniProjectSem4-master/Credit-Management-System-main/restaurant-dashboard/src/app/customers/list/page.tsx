@@ -86,19 +86,21 @@ export default function CustomerListPage() {
       const response = await fetch(`http://localhost:8080/customers/${id}/delete`, {
         method: 'DELETE',
         headers: {
+          'Content-Type': 'application/json',
           'Admin-ID': adminId.toString()
         }
       })
 
       if (response.ok) {
         setCustomers(customers.filter(customer => customer.id !== id))
+        alert('Customer deleted successfully')
       } else {
-        const data = await response.json()
-        alert(data || 'Failed to delete customer')
+        const text = await response.text()
+        throw new Error(text || 'Failed to delete customer')
       }
     } catch (error) {
       console.error('Failed to delete customer:', error)
-      alert('Failed to delete customer')
+      alert(error instanceof Error ? error.message : 'Failed to delete customer')
     }
   }
 
@@ -123,7 +125,7 @@ export default function CustomerListPage() {
       }
 
       const { id: adminId } = JSON.parse(adminData)
-      const response = await fetch(`http://localhost:8080/api/customers/${customerId}/settle`, {  // Updated endpoint
+      const response = await fetch(`http://localhost:8080/customers/${customerId}/settle`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -132,14 +134,15 @@ export default function CustomerListPage() {
         body: JSON.stringify({
           amount: settlementAmount,
           notes: 'Balance settlement',
-          adminId: adminId  // Added adminId to request body
+          adminId: adminId,
+          initialBalance: 0  // Ensure initial balance is always 0
         })
       })
 
       if (response.ok) {
         const updatedCustomer = await response.json()
         setCustomers(customers.map(c => 
-          c.id === customerId ? { ...c, creditBalance: updatedCustomer.creditBalance } : c
+          c.id === customerId ? { ...c, creditBalance: 0 } : c
         ))
         alert('Balance settled successfully')
       } else {

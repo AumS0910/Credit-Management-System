@@ -57,7 +57,7 @@ public class CustomerController {
                                          @RequestHeader("Admin-ID") String adminIdStr) {
         try {
             Long adminId = Long.parseLong(adminIdStr);
-            customer.setCreditBalance(customer.getTotalCredit());
+            customer.setCreditBalance(BigDecimal.ZERO); // Set initial balance to 0
             customer.setActive(true);
             customer.setAdminId(adminId);
             Customer savedCustomer = customerService.createCustomer(customer, adminId);

@@ -32,27 +32,30 @@ export default function AddCustomerPage() {
         return
       }
 
-      const { id } = JSON.parse(adminData)
+      const { id: adminId } = JSON.parse(adminData)
       const response = await fetch("http://localhost:8080/customers/add", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Admin-ID": id.toString()
+          "Admin-ID": adminId.toString()
         },
         body: JSON.stringify({
           ...formData,
-          totalCredit: parseFloat(formData.totalCredit)
+          totalCredit: parseFloat(formData.totalCredit),
+          creditBalance: 0,
+          active: true,
+          adminId: adminId
         })
       })
 
       if (response.ok) {
-        // Change this line to use the correct path
-        router.push('/customers/list')  // Modified this line
+        router.push('/customers/list')
       } else {
         const data = await response.json()
         setError(data.message || "Failed to add customer")
       }
     } catch (error) {
+      console.error('Failed to create customer:', error)
       setError("An error occurred. Please try again.")
     } finally {
       setLoading(false)

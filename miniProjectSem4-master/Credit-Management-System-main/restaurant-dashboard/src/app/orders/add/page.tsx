@@ -187,54 +187,34 @@ export default function AddOrderPage() {
       const { id } = JSON.parse(adminData)
       const { total, tax } = calculateTotal()
 
-      // Check if payment method is CREDIT and validate credit balance
+      // Remove the credit balance validation check
+      // Only check if customer exists
       if (formData.paymentMethod === "CREDIT") {
         const customer = customers.find(c => c.id === parseInt(formData.customerId))
         if (!customer) {
           setError("Customer not found")
           return
         }
-        if (customer.creditBalance < total) {
-          setError("Insufficient credit balance")
-          return
-        }
       }
 
       const response = await fetch("http://localhost:8080/api/orders", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Admin-ID": id.toString()
-            },
-            body: JSON.stringify({
-              customerId: parseInt(formData.customerId),
-              menuItemIds: selectedItems.map(item => item.menuItemId),
-              quantities: selectedItems.map(item => item.quantity),
-              paymentMethod: formData.paymentMethod,
-              notes: formData.notes,
-              tax: tax,
-              totalAmount: total
-            })
-          })
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Admin-ID": id.toString()
+        },
+        body: JSON.stringify({
+          customerId: parseInt(formData.customerId),
+          menuItemIds: selectedItems.map(item => item.menuItemId),
+          quantities: selectedItems.map(item => item.quantity),
+          paymentMethod: formData.paymentMethod,
+          notes: formData.notes,
+          tax: tax,
+          totalAmount: total
+        })
+      })
 
       if (response.ok) {
-        // If it's a credit payment, update the customer's credit balance
-        if (formData.paymentMethod === "CREDIT") {
-          const updateBalanceResponse = await fetch(`http://localhost:8080/customers/${formData.customerId}/update-balance`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Admin-ID": id.toString()
-            },
-            body: JSON.stringify({
-              amount: -total // Negative amount to decrease balance
-            })
-          })
-
-          if (!updateBalanceResponse.ok) {
-            console.error("Failed to update customer balance")
-          }
-        }
         router.push('/orders')
       } else {
         const data = await response.json()

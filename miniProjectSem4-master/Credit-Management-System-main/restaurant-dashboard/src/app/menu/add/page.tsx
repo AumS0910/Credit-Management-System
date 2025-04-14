@@ -75,7 +75,7 @@ export default function AddMenuItemPage() {
       }
 
       const { id } = JSON.parse(adminData)
-      const response = await fetch("http://localhost:8080/menu-items/add", {
+      const response = await fetch("http://localhost:8080/api/menu-items/add", {  // Update API endpoint
         method: "POST",
         headers: {
           "Content-Type": "application/json",

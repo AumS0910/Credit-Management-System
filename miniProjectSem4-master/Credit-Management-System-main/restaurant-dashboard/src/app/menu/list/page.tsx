@@ -42,7 +42,7 @@ export default function MenuListPage() {
       }
 
       const { id } = JSON.parse(adminData)
-      const response = await fetch(`http://localhost:8080/menu-items/list`, {
+      const response = await fetch(`http://localhost:8080/api/menu-items`, {  // Updated endpoint
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Admin-ID': id.toString()

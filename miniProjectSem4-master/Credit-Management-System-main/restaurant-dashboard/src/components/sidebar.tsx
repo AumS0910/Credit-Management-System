@@ -38,7 +38,7 @@ const sidebarItems = [
   {
     title: "Analytics",
     icon: RiLineChartLine,
-    href: "/dashboard/analytics",
+    href: "/analytics",
   },
   {
     title: "Settings",

@@ -5,17 +5,16 @@ import com.restaurant.creditmanagement.model.Order;
 import com.restaurant.creditmanagement.service.CustomerService;
 import com.restaurant.creditmanagement.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import javax.servlet.http.HttpSession;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.*;
+import java.util.*;
+import java.time.LocalDateTime;
+import java.time.DayOfWeek;
+import java.time.format.DateTimeFormatter;
 
-@Controller
-@RequestMapping("/reports")
+@RestController
+@RequestMapping("/api/reports")
 public class ReportsController {
 
     @Autowired
@@ -24,21 +23,82 @@ public class ReportsController {
     @Autowired
     private OrderService orderService;
 
-    @GetMapping
-    public String showReports(Model model, HttpSession session) {
-        Long adminId = (Long) session.getAttribute("adminId");
+    @GetMapping("/detailed")
+    public ResponseEntity<?> getDetailedAnalytics(@RequestHeader("Admin-ID") Long adminId) {
         if (adminId == null) {
-            return "redirect:/login";
+            return ResponseEntity.badRequest().body("Admin ID is required");
         }
 
-        // Update to pass adminId to service methods
-        List<Customer> customers = customerService.getAllCustomers(adminId);
-        List<Order> orders = orderService.getAllOrdersByAdmin(adminId);
+        Map<String, Object> response = new HashMap<>();
         
-        // Calculate statistics
-        model.addAttribute("customers", customers);
-        model.addAttribute("orders", orders);
+        // Menu Analytics
+        Map<String, Object> menuAnalytics = new HashMap<>();
         
-        return "reports/index";
+        // Top Selling Items
+        List<Map<String, Object>> topSellingItems = orderService.getTopSellingItems(adminId);
+        menuAnalytics.put("topSellingItems", topSellingItems);
+        
+        // Category Performance
+        List<Map<String, Object>> categoryPerformance = orderService.getCategoryPerformance(adminId);
+        menuAnalytics.put("categoryPerformance", categoryPerformance);
+        
+        // Time-based Analysis
+        Map<String, Object> timeBasedAnalysis = new HashMap<>();
+        timeBasedAnalysis.put("peakHours", orderService.getPeakHours(adminId));
+        timeBasedAnalysis.put("weeklyTrends", orderService.getWeeklyTrends(adminId));
+        menuAnalytics.put("timeBasedAnalysis", timeBasedAnalysis);
+        
+        // Customer Analytics
+        Map<String, Object> customerAnalytics = new HashMap<>();
+        customerAnalytics.put("loyaltyDistribution", customerService.getLoyaltyDistribution(adminId));
+        customerAnalytics.put("orderFrequency", customerService.getOrderFrequency(adminId));
+        customerAnalytics.put("averageOrderValue", orderService.getAverageOrderValue(adminId));
+
+        response.put("menuAnalytics", menuAnalytics);
+        response.put("customerAnalytics", customerAnalytics);
+
+        return ResponseEntity.ok(response);
+    }
+
+    // Add corresponding methods in OrderService
+    @Service
+    public class OrderService {
+        public List<Map<String, Object>> getTopSellingItems(Long adminId) {
+            // Implementation to get top selling items
+            // Return format: [{name: string, quantity: number, revenue: number}]
+        }
+
+        public List<Map<String, Object>> getCategoryPerformance(Long adminId) {
+            // Implementation to get category performance
+            // Return format: [{category: string, orders: number, revenue: number}]
+        }
+
+        public List<Map<String, Object>> getPeakHours(Long adminId) {
+            // Implementation to get peak hours analysis
+            // Return format: [{hour: string, orders: number}]
+        }
+
+        public List<Map<String, Object>> getWeeklyTrends(Long adminId) {
+            // Implementation to get weekly trends
+            // Return format: [{day: string, orders: number, revenue: number}]
+        }
+
+        public double getAverageOrderValue(Long adminId) {
+            // Implementation to calculate average order value
+        }
+    }
+
+    // Add corresponding methods in CustomerService
+    @Service
+    public class CustomerService {
+        public List<Map<String, Object>> getLoyaltyDistribution(Long adminId) {
+            // Implementation to get customer loyalty distribution
+            // Return format: [{category: string, count: number}]
+        }
+
+        public List<Map<String, Object>> getOrderFrequency(Long adminId) {
+            // Implementation to get order frequency distribution
+            // Return format: [{frequency: string, customers: number}]
+        }
     }
 }

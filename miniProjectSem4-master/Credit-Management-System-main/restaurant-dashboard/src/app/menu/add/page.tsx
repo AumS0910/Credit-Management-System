@@ -21,7 +21,7 @@ interface MenuItem {
   prepTime: number;
   isSpecial: boolean;
   available: boolean;
-  rating: number;
+  rating: string;
 }
 
 export default function AddMenuItemPage() {

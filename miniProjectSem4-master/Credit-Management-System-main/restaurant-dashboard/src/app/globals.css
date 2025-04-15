@@ -15,6 +15,7 @@
 
   body {
     @apply bg-background text-foreground m-0 p-0 min-h-screen;
+   
   }
 }
 
@@ -215,4 +216,323 @@
 
 .to-primary-dark {
   --tw-gradient-to: hsl(var(--primary) / 0.8);
+}
+
+.perspective-1000 {
+  perspective: 2000px;
+  transform-style: preserve-3d;
+  overflow: visible;
+}
+
+.fixed-card {
+  position: absolute;
+  left: 40px;
+  top: 20%;
+  background: transparent;
+  padding: 2rem;
+  width: 450px; /* Increased width to accommodate the new card */
+  z-index: 10;
+}
+
+.rating-badge {
+  background: #FFE4E9;
+  color: #333;
+  padding: 0.4rem 0.8rem;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: 600;
+  font-size: 1.2rem;
+  transform-origin: center;
+}
+
+.carousel-container {
+  @apply relative mx-auto;
+  height: 700px;
+  width: 100%;
+  max-width: 1100px;
+  background: linear-gradient(180deg, #f3f4f6 0%, #e5e7eb 100%);
+  border-radius: 24px;
+  overflow: visible;
+  perspective: 2000px;
+  transform-style: preserve-3d;
+  padding: 2rem;
+  margin: 2rem auto;
+}
+
+.rating-badge span:last-child {
+  font-size: 1rem;
+  margin-top: 1px;
+}
+
+Button.ghost {
+  background: transparent;
+  color: #666;
+  border: none;
+  font-size: 0.9rem;
+  padding: 0.5rem 1rem;
+  transition: all 0.2s;
+}
+
+Button.ghost:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.carousel-container {
+  @apply relative mx-auto;
+  height: 500px;
+  width: 100%;
+  max-width: 1100px;
+  background: linear-gradient(180deg, #f3f4f6 0%, #e5e7eb 100%);
+  border-radius: 24px;
+  overflow: visible;
+  perspective: 2000px;
+  transform-style: preserve-3d;
+  padding: 2rem;
+  margin: 2rem auto;
+}
+
+.action-btn {
+  color: #666;
+  transition: all 0.2s;
+}
+
+.action-btn:hover {
+  color: #000;
+  background: #f3f4f6;
+}
+
+.carousel-container {
+  @apply relative mx-auto;
+  height: 500px;
+  width: 100%;
+  margin-right: 50px;
+  max-width: 1100px;
+  background: linear-gradient(180deg, #f3f4f6 0%, #e5e7eb 100%);
+  border-radius: 24px;
+  overflow: hidden;
+  perspective: 2000px;
+  transform-style: preserve-3d;
+  padding: 2rem;
+  margin: 2rem auto;
+  isolation: isolate;
+}
+
+.carousel-item {
+  width: auto;
+  min-width: 700px;
+  height: 300px;
+  position: absolute;
+  left: 50%;
+  top: 30%;
+  transform-origin: 50% 50%;
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+}
+
+.carousel-wrapper {
+  transform-style: preserve-3d;
+  height: 100%;
+  position: relative;
+  z-index: 2;
+}
+
+.text-content {
+  position: absolute;
+  left: 320px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: max-content;
+  color: #333;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.carousel-item {
+  width: auto;
+  min-width: 700px;
+  height: 300px;
+  position: absolute;
+  left: 50%;
+  top: 30%;
+  transform-origin: 50% 100%;
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  backface-visibility: hidden;
+  pointer-events: none;
+}
+
+.carousel-container {
+  @apply absolute mx-auto;
+  top: 130px;
+  left: 495px;
+  margin-left: 100px;
+  height: 450px;
+  width: 100%;
+  max-width: 950px;
+  background: rgba(243, 244, 246, 0.5);
+  border-radius: 24px;
+  overflow: hidden;
+  perspective: 2000px;
+  transform-style: preserve-3d;
+  padding: 2rem;
+  margin: 2rem auto;
+  isolation: isolate;
+}
+
+.carousel-ring {
+  position: absolute;
+  width: 800px;
+  height: 400px;
+  left: 50%;
+  top: 50%;
+  transform: translateX(-50%) translateY(-50%) rotate(180deg);
+  border-radius: 400px 400px 0 0;
+  background: linear-gradient(180deg, rgba(229, 231, 235, 0.5) 0%, rgba(209, 213, 219, 0.5) 100%);
+  z-index: 1;
+}
+
+.carousel-track {
+  position: absolute;
+  width: 700px;
+  height: 350px;
+  left: 50%;
+  top: 50%;
+  transform: translateX(-50%) translateY(-50%) rotate(180deg);
+  border-radius: 350px 350px 0 0;
+  border-top: 2px solid rgba(255,255,255,0.3);
+  z-index: 1;
+}
+
+.thumbnail-slider {
+  position: absolute;
+  left: 70%; /* Increased from 900px to shift to the right */
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  z-index: 20;
+  padding-top: 30px;
+  width: 100%;
+  max-width: 800px;
+  margin-left: 90px;
+}
+
+.thumbnail {
+  @apply w-20 h-20 rounded-full overflow-hidden cursor-pointer transition-all duration-300 transform;
+  border: 2px solid transparent;
+}
+
+.thumbnail.active {
+  border-color: hsl(var(--primary));
+  transform: scale(1.1);
+}
+
+.thumbnail:hover {
+  @apply scale-110;
+}
+
+.thumbnail.active {
+  @apply ring-4 ring-primary scale-110;
+}
+
+.menu-container {
+  @apply relative bg-gray-100 rounded-3xl p-12 mx-auto my-8 max-w-7xl;
+}
+
+.carousel-ring {
+  position: absolute;
+  width: 800px;
+  height: 400px;
+  left: 50%;
+  top: 50%;
+  transform: translateX(-50%) translateY(-50%) rotate(180deg);
+  border-radius: 400px 400px 0 0;
+  background: linear-gradient(180deg, rgba(229, 231, 235, 0.5) 0%, rgba(209, 213, 219, 0.5) 100%);
+}
+
+.carousel-track {
+  position: absolute;
+  width: 700px;
+  height: 350px;
+  left: 50%;
+  top: 50%;
+  transform: translateX(-50%) translateY(-50%) rotate(180deg);
+  border-radius: 350px 350px 0 0;
+  border-top: 2px solid rgba(255,255,255,0.3);
+  z-index: 1;
+}
+
+.carousel-item {
+  position: absolute;
+  left: 50%;
+  top: 40%; /* Changed from 30% to 40% to move items down */
+  transform-origin: 50% 100%;
+  transition: all 1.2s cubic-bezier(0.4, 0, 0.2, 1); /* Increased duration from 0.6s to 1s */
+}
+
+.thumbnail-slider {
+  position: absolute;
+  bottom: 50px;
+  left: 51%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 20px;
+  z-index: 20;
+  padding: 0 40px;
+  margin-top: 20px;
+  background: transparent;
+}
+
+/* Remove or comment out the existing .thumbnail styles since we're using inline styles now */
+.thumbnail {
+  @apply w-20 h-20 rounded-full overflow-hidden cursor-pointer transition-all duration-300 transform;
+  margin-bottom: 20px;  /* Add bottom margin */
+}
+
+.item-card {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 2rem;
+  border-radius: 1.5rem;
+  min-width: 320px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(8px);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.rating-badge {
+  background: #FFD6E6;
+  color: #333;
+  padding: 0.4rem 0.8rem;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: 600;
+  font-size: 1.2rem;
+}
+
+.rating-badge span:first-child {
+  color: #333;
+  font-size: 0.8rem;
+}
+
+.card-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.action-btn {
+  transition: all 0.2s;
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }

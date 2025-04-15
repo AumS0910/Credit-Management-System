@@ -92,36 +92,7 @@ public class CustomerController {
 
     
 
-    @PostMapping("/{id}/settle")
-    public ResponseEntity<?> settleBalance(@PathVariable Long id,
-                                           @RequestBody Transaction transaction) {
-        try {
-            Long adminId = 1L; // TODO: Get this from security context
-            Customer customer = customerService.getCustomerById(id, adminId)
-                    .orElseThrow(() -> new IllegalArgumentException("Customer not found"));
-
-            if (transaction.getAmount().compareTo(customer.getCreditBalance()) > 0) {
-                return ResponseEntity.badRequest()
-                        .body("Settlement amount cannot exceed outstanding balance");
-            }
-
-            BigDecimal newBalance = customer.getCreditBalance().subtract(transaction.getAmount());
-            customer.setCreditBalance(newBalance);
-            customerService.updateCustomer(customer, adminId);
-
-            transaction.setCustomer(customer);
-            transaction.setType(TransactionType.SETTLEMENT);
-            transaction.setStatus("COMPLETED");
-            transaction.setTransactionDate(LocalDateTime.now());
-            transaction.setAdminId(adminId);
-            Transaction savedTransaction = transactionService.saveTransaction(transaction);
-
-            return ResponseEntity.ok(savedTransaction);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to process payment: " + e.getMessage());
-        }
-    }
+    
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getCustomer(@PathVariable Long id, 
@@ -170,4 +141,49 @@ public class CustomerController {
                     .body("Failed to update customer: " + e.getMessage());
         }
     }
+
+    @PostMapping("/{id}/settle")
+        public ResponseEntity<?> settleBalance(
+                @PathVariable Long id,
+                @RequestBody Transaction transaction,
+                @RequestHeader("Admin-ID") String adminIdStr) {
+            try {
+                Long adminId = Long.parseLong(adminIdStr);
+                Optional<Customer> customerOpt = customerService.getCustomerById(id, adminId);
+                
+                if (!customerOpt.isPresent()) {
+                    return ResponseEntity.notFound().build();
+                }
+    
+                Customer customer = customerOpt.get();
+                BigDecimal settlementAmount = transaction.getAmount();
+                
+                // Validate settlement amount
+                if (settlementAmount.compareTo(BigDecimal.ZERO) <= 0 || 
+                    settlementAmount.compareTo(customer.getCreditBalance()) > 0) {
+                    return ResponseEntity.badRequest()
+                        .body("Invalid settlement amount");
+                }
+    
+                // Set transaction details
+                transaction.setCustomerId(id);
+                transaction.setType("SETTLEMENT");
+                transaction.setStatus("COMPLETED");
+                transaction.setTransactionDate(LocalDateTime.now());
+                transaction.setAdminId(adminId);
+                
+                // Update customer balance
+                BigDecimal newBalance = customer.getCreditBalance().subtract(settlementAmount);
+                customer.setCreditBalance(newBalance);
+                
+                // Save transaction and update customer
+                transactionRepository.save(transaction);
+                Customer updatedCustomer = customerService.updateCustomer(customer, adminId);
+                
+                return ResponseEntity.ok(updatedCustomer);
+            } catch (Exception e) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body("Failed to settle balance: " + e.getMessage());
+            }
+        }
 }

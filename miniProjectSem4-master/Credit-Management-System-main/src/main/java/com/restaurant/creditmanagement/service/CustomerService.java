@@ -101,50 +101,38 @@ public class CustomerService {
         return Optional.empty();
     }
 
+
+
+    // Remove the old settleBalance method that uses setCustomer
+    
     @Transactional
-    public void settleBalance(Long customerId, BigDecimal settlementAmount, Long adminId) {
+    public Customer settleBalance(Long customerId, Long adminId, Transaction settlement) {
         Optional<Customer> customerOpt = getCustomerById(customerId, adminId);
         if (!customerOpt.isPresent()) {
             throw new RuntimeException("Customer not found");
         }
 
         Customer customer = customerOpt.get();
-        if (customer.getCreditBalance().compareTo(BigDecimal.ZERO) == 0) {
-            throw new RuntimeException("Customer has no outstanding balance to settle");
+        BigDecimal settlementAmount = settlement.getAmount();
+
+        if (settlementAmount.compareTo(BigDecimal.ZERO) <= 0 || 
+            settlementAmount.compareTo(customer.getCreditBalance()) > 0) {
+            throw new RuntimeException("Invalid settlement amount");
         }
 
-        // Validate settlement amount
-        if (settlementAmount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new RuntimeException("Settlement amount must be greater than zero");
-        }
-        if (settlementAmount.compareTo(customer.getCreditBalance()) > 0) {
-            throw new RuntimeException("Settlement amount cannot be greater than the outstanding balance");
-        }
-
-        // Create settlement transaction
-        Transaction settlement = new Transaction();
-        settlement.setCustomer(customer);
-        settlement.setAmount(settlementAmount);
-        settlement.setType(TransactionType.SETTLEMENT);
-        settlement.setDescription("Partial balance settlement");
+        // Set transaction details
+        settlement.setCustomerId(customerId);
+        settlement.setAdminId(adminId);
+        settlement.setType("SETTLEMENT");
+        settlement.setStatus("COMPLETED");
         settlement.setTransactionDate(LocalDateTime.now());
-
-        transactionRepository.save(settlement);
-
-        // Update customer's credit balance
+        
+        // Update customer balance
         customer.setCreditBalance(customer.getCreditBalance().subtract(settlementAmount));
-        customerRepository.save(customer);
-    }
-
-    @Transactional
-    public void settleBalance(Long customerId, Long adminId) {
-        Optional<Customer> customerOpt = getCustomerById(customerId, adminId);
-        if (!customerOpt.isPresent()) {
-            throw new RuntimeException("Customer not found");
-        }
-
-        Customer customer = customerOpt.get();
-        settleBalance(customerId, customer.getCreditBalance(), adminId);
+        
+        // Save both transaction and customer
+        transactionRepository.save(settlement);
+        return customerRepository.save(customer);
     }
 
     public Long countCustomersByAdminId(Long adminId) {

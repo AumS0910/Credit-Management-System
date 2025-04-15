@@ -11,7 +11,6 @@ import java.util.List;
 @Data
 @Entity
 @Table(name = "customers")
-@SequenceGenerator(name = "customer_seq", sequenceName = "customer_sequence", initialValue = 1, allocationSize = 1)
 public class Customer {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "customer_seq")
@@ -64,7 +63,7 @@ public class Customer {
     @Column(name = "admin_id", nullable = false)
     private Long adminId;
 
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "customerId", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Transaction> transactions = new ArrayList<>();
 
     @JsonIgnoreProperties("customer")

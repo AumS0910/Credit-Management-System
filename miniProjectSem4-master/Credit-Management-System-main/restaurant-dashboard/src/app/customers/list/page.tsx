@@ -133,18 +133,21 @@ export default function CustomerListPage() {
         },
         body: JSON.stringify({
           amount: settlementAmount,
-          notes: 'Balance settlement',
+          customerId: customerId,
           adminId: adminId,
-          initialBalance: 0  // Ensure initial balance is always 0
+          type: 'SETTLEMENT',
+          status: 'COMPLETED',
+          notes: `Settled ${settlementAmount.toFixed(2)} from total balance of ${customer.creditBalance.toFixed(2)}`,
+          transactionDate: new Date().toISOString()
         })
       })
 
       if (response.ok) {
         const updatedCustomer = await response.json()
         setCustomers(customers.map(c => 
-          c.id === customerId ? { ...c, creditBalance: 0 } : c
+          c.id === customerId ? updatedCustomer : c
         ))
-        alert('Balance settled successfully')
+        alert(`Successfully settled $${settlementAmount.toFixed(2)}`)
       } else {
         const errorData = await response.json()
         throw new Error(errorData.message || 'Failed to settle balance')

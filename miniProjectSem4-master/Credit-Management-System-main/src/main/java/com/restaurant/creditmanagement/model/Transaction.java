@@ -11,26 +11,30 @@ public class Transaction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "customer_id", nullable = false)
-    private Customer customer;
+    @Column(name = "customer_id")
+    private Long customerId;
 
+    @Column(precision = 10, scale = 2)
     private BigDecimal amount;
 
-    @Enumerated(EnumType.STRING)
-    private TransactionType type;
+    @Column(length = 50)
+    private String type;
 
-    private String paymentMethod;
-
-    private String notes;
-
-    private String description;  // Add this field
-
+    @Column(length = 20)
     private String status;
 
+    @Column(length = 255)
+    private String notes;
+
+    @Column(name = "admin_id")
+    private Long adminId;
+
+    @Column(name = "transaction_date")
     private LocalDateTime transactionDate;
 
-    private Long adminId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id", insertable = false, updatable = false)
+    private Customer customer;
 
     // Getters and Setters
     public Long getId() {
@@ -41,12 +45,12 @@ public class Transaction {
         this.id = id;
     }
 
-    public Customer getCustomer() {
-        return customer;
+    public Long getCustomerId() {
+        return customerId;
     }
 
-    public void setCustomer(Customer customer) {
-        this.customer = customer;
+    public void setCustomerId(Long customerId) {
+        this.customerId = customerId;
     }
 
     public BigDecimal getAmount() {
@@ -57,36 +61,12 @@ public class Transaction {
         this.amount = amount;
     }
 
-    public TransactionType getType() {
+    public String getType() {
         return type;
     }
 
-    public void setType(TransactionType type) {
+    public void setType(String type) {
         this.type = type;
-    }
-
-    public String getPaymentMethod() {
-        return paymentMethod;
-    }
-
-    public void setPaymentMethod(String paymentMethod) {
-        this.paymentMethod = paymentMethod;
-    }
-
-    public String getNotes() {
-        return notes;
-    }
-
-    public void setNotes(String notes) {
-        this.notes = notes;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
     }
 
     public String getStatus() {
@@ -97,12 +77,12 @@ public class Transaction {
         this.status = status;
     }
 
-    public LocalDateTime getTransactionDate() {
-        return transactionDate;
+    public String getNotes() {
+        return notes;
     }
 
-    public void setTransactionDate(LocalDateTime transactionDate) {
-        this.transactionDate = transactionDate;
+    public void setNotes(String notes) {
+        this.notes = notes;
     }
 
     public Long getAdminId() {
@@ -111,5 +91,13 @@ public class Transaction {
 
     public void setAdminId(Long adminId) {
         this.adminId = adminId;
+    }
+
+    public LocalDateTime getTransactionDate() {
+        return transactionDate;
+    }
+
+    public void setTransactionDate(LocalDateTime transactionDate) {
+        this.transactionDate = transactionDate;
     }
 }

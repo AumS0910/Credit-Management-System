@@ -85,12 +85,30 @@ export default function MenuListPage() {
     if (!confirm('Are you sure you want to delete this menu item?')) return
 
     try {
+      const adminData = localStorage.getItem('adminData')
+      if (!adminData) {
+        router.push('/login')
+        return
+      }
+      const { id: adminId } = JSON.parse(adminData)
+
       const response = await fetch(`http://localhost:8080/api/menu-items/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          "Content-Type": "application/json",
+          "Admin-ID": adminId.toString(),
+          "Authorization": `Bearer ${localStorage.getItem('token')}`
+        }
       })
 
       if (response.ok) {
         setMenuItems(menuItems.filter(item => item.id !== id))
+        // Reset activeIndex if necessary
+        if (activeIndex >= menuItems.length - 1) {
+          setActiveIndex(Math.max(0, menuItems.length - 2))
+        }
+      } else {
+        console.error('Failed to delete menu item')
       }
     } catch (error) {
       console.error('Failed to delete menu item:', error)
@@ -157,6 +175,10 @@ export default function MenuListPage() {
       rotateY: (angle * 180) / Math.PI
     }
   }
+
+  const handleEdit = (id: number) => {
+    router.push(`/menu/edit/${id}`);
+  };
 
   return (
     <div className="flex">
@@ -278,7 +300,10 @@ export default function MenuListPage() {
                         >
                           {selectedItems.some(item => item.id === menuItems[activeIndex].id) ? 'Selected' : 'Select'}
                         </Button>
-                        <Button variant="outline" onClick={() => router.push(`/menu/edit/${menuItems[activeIndex].id}`)}>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => handleEdit(menuItems[activeIndex].id)}
+                        >
                           <RiEditLine className="h-4 w-4" />
                         </Button>
                         <Button variant="outline" onClick={() => handleDelete(menuItems[activeIndex].id)}>

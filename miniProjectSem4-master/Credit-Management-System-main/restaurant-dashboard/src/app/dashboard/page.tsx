@@ -126,14 +126,13 @@ export default function DashboardPage() {
       </div>
 
       {/* Middle Row */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2">
         <motion.div
-          className="lg:col-span-2"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.6 }}
         >
-          <Card className="glass-card">
+          <Card className="glass-card h-full">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Recent Orders</CardTitle>
             </CardHeader>
@@ -148,7 +147,7 @@ export default function DashboardPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.7 }}
         >
-          <Card className="glass-card">
+          <Card className="glass-card h-full">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Recent Customers</CardTitle>
             </CardHeader>
@@ -160,22 +159,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Bottom Row */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.8 }}
-        >
-          <Card className="glass-card">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Popular Items</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <PopularItems />
-            </CardContent>
-          </Card>
-        </motion.div>
-
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {/* Quick Action Cards */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

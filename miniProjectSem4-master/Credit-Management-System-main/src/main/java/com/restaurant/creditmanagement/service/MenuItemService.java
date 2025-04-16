@@ -72,7 +72,15 @@ public class MenuItemService {
         return menuItemRepository.save(menuItem);
     }
 
-    public void deleteMenuItem(Long id) {
-        menuItemRepository.deleteById(id);
+    // Add this method to MenuItemService
+    public void deleteMenuItem(Long menuItemId, Long adminId) {
+        MenuItem menuItem = menuItemRepository.findById(menuItemId)
+            .orElseThrow(() -> new RuntimeException("Menu item not found"));
+        
+        if (!menuItem.getAdminId().equals(adminId)) {
+            throw new RuntimeException("Unauthorized to delete this menu item");
+        }
+        
+        menuItemRepository.deleteById(menuItemId);
     }
 }

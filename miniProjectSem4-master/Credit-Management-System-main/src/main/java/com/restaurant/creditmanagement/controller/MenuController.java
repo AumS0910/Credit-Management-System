@@ -140,7 +140,7 @@ public class MenuController {
     }
 
     // Get specific menu item
-    @GetMapping("/menu-items/{id}")
+    @GetMapping("/get/{id}")
     public ResponseEntity<?> getMenuItem(@PathVariable Long id, 
                                        @RequestHeader("Admin-ID") String adminId) {
         try {
@@ -153,6 +153,37 @@ public class MenuController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
                     Collections.singletonMap("error", "Failed to fetch menu item: " + e.getMessage())
             );
+        }
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateMenuItem(
+            @PathVariable Long id,
+            @RequestBody MenuItem menuItem,
+            @RequestHeader("Admin-ID") String adminId) {
+        try {
+            Long adminIdLong = Long.parseLong(adminId);
+            menuItem.setId(id);
+            menuItem.setAdminId(adminIdLong);
+            
+            MenuItem updatedItem = menuItemService.updateMenuItem(menuItem);
+            return ResponseEntity.ok(updatedItem);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Collections.singletonMap("error", "Failed to update menu item: " + e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteMenuItem(
+            @PathVariable Long id,
+            @RequestHeader("Admin-ID") String adminId) {
+        try {
+            menuItemService.deleteMenuItem(id, Long.parseLong(adminId));
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Collections.singletonMap("error", "Failed to delete menu item: " + e.getMessage()));
         }
     }
 }

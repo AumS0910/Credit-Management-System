@@ -69,25 +69,67 @@ export default function AddOrderPage() {
   const fetchCustomers = async () => {
     try {
       const adminData = localStorage.getItem('adminData')
-      if (!adminData) return
+      if (!adminData) {
+        router.push('/login')
+        return
+      }
       const { id } = JSON.parse(adminData)
-  
-      const customersRes = await fetch(`http://localhost:8080/customers`, {
+
+      const response = await fetch('http://localhost:8080/customers', {
         headers: {
           "Content-Type": "application/json",
           "Admin-ID": id.toString()
         }
       })
-      if (customersRes.ok) {
-        const customersData = await customersRes.json()
-        console.log('Fetched customers:', customersData)
-        setCustomers(customersData)
+
+      if (response.ok) {
+        const data = await response.json()
+        setCustomers(data)
+      } else {
+        setError("Failed to fetch customers")
       }
     } catch (error) {
       console.error('Failed to fetch customers:', error)
+      setError("Failed to load customers")
     }
   }
 
+  const fetchMenuItems = async () => {
+    try {
+      const adminData = localStorage.getItem('adminData')
+      if (!adminData) {
+        router.push('/login')
+        return
+      }
+      const { id, token } = JSON.parse(adminData)
+
+      const response = await fetch(`http://localhost:8080/api/menu-items`, {
+        headers: {
+          "Content-Type": "application/json",
+          "Admin-ID": id.toString(),
+          "Authorization": `Bearer ${token}`
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setMenuItems(data)
+      } else {
+        setError("Failed to fetch menu items")
+      }
+    } catch (error) {
+      console.error('Failed to fetch menu items:', error)
+      setError("Failed to load menu items")
+    }
+  }
+
+  useEffect(() => {
+    const init = async () => {
+      await Promise.all([fetchCustomers(), fetchMenuItems()])
+    }
+    init()
+  }, [])
+  
   const fetchCustomersAndMenuItems = async () => {
     try {
       const adminData = localStorage.getItem('adminData')

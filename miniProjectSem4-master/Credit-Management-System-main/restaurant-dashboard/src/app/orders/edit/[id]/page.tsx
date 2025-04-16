@@ -2,11 +2,13 @@
 
 import React, { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { Sidebar } from "@/components/sidebar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
+import { motion } from "framer-motion"
 
 interface OrderData {
   id: number
@@ -94,65 +96,76 @@ export default function EditOrderPage({ params }: { params: Promise<{ id: string
   if (!orderData) return <div>Loading...</div>
 
   return (
-    <div className="min-h-screen p-8 bg-background">
-      <Card>
-        <CardHeader>
-          <CardTitle>Edit Order #{orderId}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="status">Status</Label>
-              <Select
-                id="status"
-                value={orderData.status}
-                onChange={(e) => setOrderData({ ...orderData, status: e.target.value })}
-              >
-                <option value="PENDING">Pending</option>
-                <option value="COMPLETED">Completed</option>
-                <option value="CANCELLED">Cancelled</option>
-              </Select>
-            </div>
+    <div className="flex">
+      <Sidebar />
+      <main className="flex-1">
+        <div className="min-h-screen p-8 bg-background">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle>Edit Order #{orderId}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <Label htmlFor="status">Status</Label>
+                    <Select
+                      id="status"
+                      value={orderData.status}
+                      onChange={(e) => setOrderData({ ...orderData, status: e.target.value })}
+                    >
+                      <option value="PENDING">Pending</option>
+                      <option value="COMPLETED">Completed</option>
+                      <option value="CANCELLED">Cancelled</option>
+                    </Select>
+                  </div>
 
-            <div>
-              <Label htmlFor="paymentMethod">Payment Method</Label>
-              <Select
-                id="paymentMethod"
-                value={orderData.paymentMethod}
-                onChange={(e) => setOrderData({ ...orderData, paymentMethod: e.target.value })}
-              >
-                <option value="CASH">Cash</option>
-                <option value="CREDIT">Credit</option>
-                <option value="CARD">Card</option>
-              </Select>
-            </div>
+                  <div>
+                    <Label htmlFor="paymentMethod">Payment Method</Label>
+                    <Select
+                      id="paymentMethod"
+                      value={orderData.paymentMethod}
+                      onChange={(e) => setOrderData({ ...orderData, paymentMethod: e.target.value })}
+                    >
+                      <option value="CASH">Cash</option>
+                      <option value="CREDIT">Credit</option>
+                      <option value="CARD">Card</option>
+                    </Select>
+                  </div>
 
-            <div>
-              <Label htmlFor="notes">Notes</Label>
-              <Input
-                id="notes"
-                value={orderData.notes || ''}
-                onChange={(e) => setOrderData({ ...orderData, notes: e.target.value })}
-              />
-            </div>
+                  <div>
+                    <Label htmlFor="notes">Notes</Label>
+                    <Input
+                      id="notes"
+                      value={orderData.notes || ''}
+                      onChange={(e) => setOrderData({ ...orderData, notes: e.target.value })}
+                    />
+                  </div>
 
-            {error && <div className="text-red-500">{error}</div>}
+                  {error && <div className="text-red-500">{error}</div>}
 
-            <div className="flex gap-2">
-              <Button type="submit" disabled={loading}>
-                {loading ? "Updating..." : "Update Order"}
-              </Button>
-              <Button 
-                type="button" 
-                variant="outline"
-                onClick={() => router.push('/orders')}
-              >
-                Cancel
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+                  <div className="flex gap-2">
+                    <Button type="submit" disabled={loading}>
+                      {loading ? "Updating..." : "Update Order"}
+                    </Button>
+                    <Button 
+                      type="button" 
+                      variant="outline"
+                      onClick={() => router.push('/orders')}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+      </main>
     </div>
   )
 }

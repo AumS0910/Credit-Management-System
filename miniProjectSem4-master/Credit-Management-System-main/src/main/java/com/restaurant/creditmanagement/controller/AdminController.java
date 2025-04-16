@@ -115,4 +115,43 @@ public class AdminController {
                     .body(Collections.singletonMap("error", "Logout failed: " + e.getMessage()));
         }
     }
+
+    @GetMapping("/admin/{id}")
+    public ResponseEntity<?> getAdminSettings(@PathVariable Long id) {
+        try {
+            Admin admin = adminService.getAdminSettings(id);
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", admin.getId());
+            response.put("name", admin.getName());
+            response.put("email", admin.getEmail());
+            response.put("restaurantName", admin.getRestaurantName());
+            response.put("phoneNumber", admin.getPhoneNumber());
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Collections.singletonMap("error", "Failed to fetch admin settings: " + e.getMessage()));
+        }
+    }
+
+    @PutMapping("/admin/{id}")
+    public ResponseEntity<?> updateAdminSettings(
+            @PathVariable Long id,
+            @RequestBody Admin adminDetails) {
+        try {
+            Admin updatedAdmin = adminService.updateAdminSettings(id, adminDetails);
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", updatedAdmin.getId());
+            response.put("name", updatedAdmin.getName());
+            response.put("email", updatedAdmin.getEmail());
+            response.put("restaurantName", updatedAdmin.getRestaurantName());
+            response.put("phoneNumber", updatedAdmin.getPhoneNumber());
+            response.put("message", "Settings updated successfully");
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Collections.singletonMap("error", "Failed to update admin settings: " + e.getMessage()));
+        }
+    }
 }

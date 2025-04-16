@@ -88,4 +88,26 @@ public class AdminService {
             adminRepository.save(admin);
         }
     }
+
+    public Admin updateAdminSettings(Long id, Admin adminDetails) {
+        Optional<Admin> adminOpt = adminRepository.findById(id);
+        if (!adminOpt.isPresent()) {
+            throw new RuntimeException("Admin not found");
+        }
+
+        Admin admin = adminOpt.get();
+        
+        // Update only the allowed fields
+        admin.setName(adminDetails.getName());
+        admin.setEmail(adminDetails.getEmail());
+        admin.setRestaurantName(adminDetails.getRestaurantName());
+        admin.setPhoneNumber(adminDetails.getPhoneNumber());
+
+        return adminRepository.save(admin);
+    }
+
+    public Admin getAdminSettings(Long id) {
+        return adminRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Admin not found"));
+    }
 }

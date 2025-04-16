@@ -351,35 +351,40 @@ export default function MenuListPage() {
           </div>
   
           <div className="thumbnail-slider relative">
-            <button className="absolute left-0 top-1/2 transform -translate-y-1/2 z-10" onClick={prevSlide}>
-              <RiArrowLeftLine className="h-8 w-8 text-gray-600" />
+            <button className="carousel-arrow left" onClick={prevSlide}>
+              <RiArrowLeftLine className="h-6 w-6" />
             </button>
-            {menuItems.map((item, index) => (
-              <div 
-                key={item.id} 
-                className={`flex flex-col items-center p-3 rounded-xl transition-all duration-300 cursor-pointer ${
-                  index === activeIndex 
-                    ? 'bg-gray-100/70 backdrop-blur-sm shadow-sm' 
-                    : 'hover:bg-gray-50/50'
-                }`}
-                onClick={() => setActiveIndex(index)}
-              >
-                <div className={`w-20 h-20 overflow-hidden rounded-xl transition-transform duration-300 ${
-                  index === activeIndex ? 'scale-105' : ''
-                }`}>
-                  <img 
-                    src={item.imageUrl} 
-                    alt={item.name} 
-                    className="w-full h-full object-cover"
-                  />
+            <div className="flex gap-4 overflow-hidden w-[480px]"> {/* Fixed width container for 4 items */}
+              {menuItems.slice(
+                Math.floor(activeIndex / 4) * 4,
+                Math.floor(activeIndex / 4) * 4 + 4
+              ).map((item, index) => (
+                <div 
+                  key={item.id} 
+                  className={`flex-shrink-0 flex flex-col items-center p-3 rounded-xl transition-all duration-300 cursor-pointer ${
+                    index + Math.floor(activeIndex / 4) * 4 === activeIndex 
+                      ? 'bg-gray-100/70 backdrop-blur-sm shadow-sm' 
+                      : 'hover:bg-gray-50/50'
+                  }`}
+                  onClick={() => setActiveIndex(index + Math.floor(activeIndex / 4) * 4)}
+                >
+                  <div className={`w-20 h-20 overflow-hidden rounded-xl transition-transform duration-300 ${
+                    index + Math.floor(activeIndex / 4) * 4 === activeIndex ? 'scale-105' : ''
+                  }`}>
+                    <img 
+                      src={item.imageUrl} 
+                      alt={item.name} 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <span className="text-sm text-gray-600 mt-2 text-center line-clamp-1">
+                    {item.name}
+                  </span>
                 </div>
-                <span className="text-sm text-gray-600 mt-2 text-center line-clamp-1">
-                  {item.name}
-                </span>
-              </div>
-            ))}
-            <button className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10" onClick={nextSlide}>
-              <RiArrowRightLine className="h-8 w-8 text-gray-600" />
+              ))}
+            </div>
+            <button className="carousel-arrow right" onClick={nextSlide}>
+              <RiArrowRightLine className="h-6 w-6" />
             </button>
           </div>
         </div>

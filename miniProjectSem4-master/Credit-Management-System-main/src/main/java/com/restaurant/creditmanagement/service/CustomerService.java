@@ -15,8 +15,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class CustomerService {
@@ -137,5 +136,63 @@ public class CustomerService {
 
     public Long countCustomersByAdminId(Long adminId) {
         return customerRepository.countByAdminId(adminId);
+    }
+
+    public List<Map<String, Object>> getLoyaltyDistribution(Long adminId) {
+        List<Map<String, Object>> distribution = new ArrayList<>();
+        List<Customer> customers = customerRepository.findByAdminId(adminId);
+        
+        Map<String, Integer> loyaltyCount = new HashMap<>();
+        
+        for (Customer customer : customers) {
+            Integer orderCount = orderRepository.countByCustomerId(customer.getId());
+            String category = getLoyaltyCategory(orderCount != null ? orderCount : 0);
+            loyaltyCount.merge(category, 1, Integer::sum);
+        }
+
+        loyaltyCount.forEach((category, count) -> {
+            Map<String, Object> categoryData = new HashMap<>();
+            categoryData.put("category", category);
+            categoryData.put("count", count);
+            distribution.add(categoryData);
+        });
+
+        return distribution;
+    }
+
+    public List<Map<String, Object>> getOrderFrequency(Long adminId) {
+        List<Map<String, Object>> frequency = new ArrayList<>();
+        List<Customer> customers = customerRepository.findByAdminId(adminId);
+        
+        Map<String, Integer> frequencyCount = new HashMap<>();
+        
+        for (Customer customer : customers) {
+            Integer orderCount = orderRepository.countByCustomerId(customer.getId());
+            String frequencyCategory = getFrequencyCategory(orderCount != null ? orderCount : 0);
+            frequencyCount.merge(frequencyCategory, 1, Integer::sum);
+        }
+
+        frequencyCount.forEach((category, count) -> {
+            Map<String, Object> categoryData = new HashMap<>();
+            categoryData.put("frequency", category);
+            categoryData.put("customers", count);
+            frequency.add(categoryData);
+        });
+
+        return frequency;
+    }
+
+    private String getLoyaltyCategory(int orderCount) {
+        if (orderCount > 20) return "VIP";
+        if (orderCount > 10) return "Regular";
+        if (orderCount > 5) return "Occasional";
+        return "New";
+    }
+
+    private String getFrequencyCategory(int orderCount) {
+        if (orderCount > 8) return "Weekly";
+        if (orderCount > 4) return "Monthly";
+        if (orderCount > 1) return "Occasional";
+        return "One-time";
     }
 }

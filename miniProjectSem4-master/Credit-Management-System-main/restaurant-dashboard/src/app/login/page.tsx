@@ -1,9 +1,11 @@
 "use client"
 
-import React, { useState } from 'react'
+import React, { useState, useCallback, useMemo } from 'react'
 import { FaFacebookF, FaGooglePlusG, FaLinkedinIn, FaUser, FaLock, FaEnvelope } from 'react-icons/fa'
 import { useRouter } from 'next/navigation'
 import styles from './login.module.css'
+
+const API_URL = 'http://localhost:8080/api'
 
 const LoginPage: React.FC = () => {
   const router = useRouter()
@@ -11,7 +13,6 @@ const LoginPage: React.FC = () => {
   const [showForgot, setShowForgot] = useState(false)
   const [isLeftPanelActive, setIsLeftPanelActive] = useState(false)
 
-  // Form states
   const [registerData, setRegisterData] = useState({
     name: '',
     username: '',
@@ -25,62 +26,73 @@ const LoginPage: React.FC = () => {
 
   const [error, setError] = useState('')
 
-  const handleRegister = async (e: React.FormEvent) => {
+  // Memoized form handlers
+  const handleInputChange = useCallback((formType: 'login' | 'register', field: string, value: string) => {
+    if (formType === 'login') {
+      setLoginData(prev => ({ ...prev, [field]: value }))
+    } else {
+      setRegisterData(prev => ({ ...prev, [field]: value }))
+    }
+  }, [])
+
+  // Memoized API calls
+  const makeApiCall = useCallback(async (endpoint: string, data: any) => {
+    const response = await fetch(`${API_URL}/${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+    return await response.json()
+  }, [])
+
+  const handleRegister = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      const response = await fetch('http://localhost:8080/api/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(registerData),
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        setIsRightPanelActive(false) // Switch to login panel
+      const data = await makeApiCall('register', registerData)
+      if (data.success) {
+        setIsRightPanelActive(false)
         setError('')
+        setRegisterData({ name: '', username: '', password: '' }) // Clear form
       } else {
         setError(data.error || 'Registration failed')
       }
     } catch (err) {
       setError('Registration failed. Please try again.')
     }
-  }
+  }, [registerData, makeApiCall])
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      const response = await fetch('http://localhost:8080/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(loginData),
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        // Store token and admin data
+      const data = await makeApiCall('login', loginData)
+      if (data.token) {
         localStorage.setItem('token', data.token)
         localStorage.setItem('adminData', JSON.stringify({
           id: data.id,
           username: data.username
         }))
-        router.push('/dashboard') // Redirect to dashboard
+        router.push('/dashboard')
       } else {
         setError(data.error || 'Login failed')
       }
     } catch (err) {
       setError('Login failed. Please try again.')
     }
-  }
+  }, [loginData, makeApiCall, router])
 
+  const slideAnimation = useCallback((show: boolean) => {
+    setShowForgot(show)
+  }, [])
+
+  // Memoized class names
+  const containerClasses = useMemo(() => (
+    `${styles.container} ${isRightPanelActive ? styles.rightPanelActive : ''} ${isLeftPanelActive ? styles.leftPanelActive : ''}`
+  ), [isRightPanelActive, isLeftPanelActive])
+
+  // Rest of your JSX remains the same, but update the event handlers:
   return (
     <main className={styles.loginBody}>
-      <div className={`${styles.container} ${isRightPanelActive ? styles.rightPanelActive : ''} ${isLeftPanelActive ? styles.leftPanelActive : ''}`}>
+      <div className={containerClasses}>
         <div className={`${styles.formContainer} ${styles.signUpContainer}`}>
           <form className={styles.loginForm} onSubmit={handleRegister}>
             <h1 className={styles.heading1}>Create Account</h1>
@@ -166,7 +178,7 @@ const LoginPage: React.FC = () => {
                 type="text" 
                 placeholder="Username" 
                 value={loginData.username}
-                onChange={(e) => setLoginData({...loginData, username: e.target.value})}
+                onChange={(e) => handleInputChange('login', 'username', e.target.value)}
               />
             </div>
             <div className="account-input">
@@ -227,7 +239,7 @@ const LoginPage: React.FC = () => {
         </div>
       </div>
     </main>
-  );
-};
+  )
+}
 
-export default LoginPage;
+export default React.memo(LoginPage)

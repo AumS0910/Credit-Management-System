@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+// Add this to your imports
+import { RiSettings4Line as SettingsIcon } from "react-icons/ri"
 
 const sidebarItems = [
   {
@@ -42,8 +44,8 @@ const sidebarItems = [
   },
   {
     title: "Settings",
-    icon: RiSettings4Line,
-    href: "/dashboard/settings",
+    icon: SettingsIcon,
+    href: "/settings",
   },
 ]
 
@@ -110,32 +112,33 @@ export function Sidebar() {
           <RiMenu4Line className="h-5 w-5" />
         </Button>
       </div>
-      <ScrollArea className="flex-1 px-3 py-4">
-        <nav className="flex flex-col gap-1">
-          {sidebarItems.map((item, index) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`sidebar-item ${isActive(item.href) ? 'active' : ''}`}
-            >
-              <item.icon className="h-5 w-5" />
-              <AnimatePresence initial={false}>
-                {isOpen && (
-                  <motion.span
-                    key={`text-${item.href}`}
-                    initial={{ opacity: 0, width: 0 }}
-                    animate={{ opacity: 1, width: "auto" }}
-                    exit={{ opacity: 0, width: 0 }}
-                    transition={{ duration: 0.2 }}
+      
+            <ScrollArea className="flex-1 px-3 py-4">
+              <nav className="flex flex-col gap-3"> {/* Changed gap-1 to gap-3 */}
+                {sidebarItems.map((item, index) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`sidebar-item ${isActive(item.href) ? 'active' : ''}`}
                   >
-                    {item.title}
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </Link>
-          ))}
-        </nav>
-      </ScrollArea>
+                    <item.icon className="h-5 w-5" />
+                    <AnimatePresence initial={false}>
+                      {isOpen && (
+                        <motion.span
+                          key={`text-${item.href}`}
+                          initial={{ opacity: 0, width: 0 }}
+                          animate={{ opacity: 1, width: "auto" }}
+                          exit={{ opacity: 0, width: 0 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          {item.title}
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
+                  </Link>
+                ))}
+              </nav>
+            </ScrollArea>
       <div className="mt-auto p-4">
         <Separator className="mb-4" />
         <div className="flex items-center gap-2">

@@ -1,5 +1,8 @@
 package com.restaurant.creditmanagement.service;
 
+// Add this import
+import java.time.format.DateTimeFormatter;
+
 import com.restaurant.creditmanagement.model.Order;
 import com.restaurant.creditmanagement.model.OrderItem;
 import com.restaurant.creditmanagement.repository.OrderItemRepository;
@@ -10,6 +13,8 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -129,4 +134,126 @@ public class OrderService {
         // Save the updated order
         return orderRepository.save(order);
     }
+    public List<Map<String, Object>> getTopSellingItems(Long adminId) {
+        List<Map<String, Object>> topItems = new ArrayList<>();
+        List<Order> orders = orderRepository.findByAdminId(adminId);
+
+        Map<String, Integer> quantityMap = new HashMap<>();
+        Map<String, Double> revenueMap = new HashMap<>();
+
+        for (Order order : orders) {
+            // Changed from getItems() to getOrderItems()
+            for (OrderItem item : order.getOrderItems()) {
+                String itemName = item.getMenuItem().getName();
+                quantityMap.merge(itemName, item.getQuantity(), Integer::sum);
+                revenueMap.merge(itemName, 
+                    item.getQuantity() * item.getMenuItem().getPrice().doubleValue(), 
+                    Double::sum);
+            }
+        }
+
+        // Convert to required format
+        quantityMap.forEach((name, quantity) -> {
+            Map<String, Object> item = new HashMap<>();
+            item.put("name", name);
+            item.put("quantity", quantity);
+            item.put("revenue", revenueMap.get(name));
+            topItems.add(item);
+        });
+
+        return topItems;
+    }
+
+    public List<Map<String, Object>> getCategoryPerformance(Long adminId) {
+        List<Map<String, Object>> performance = new ArrayList<>();
+        List<Order> orders = orderRepository.findByAdminId(adminId);
+
+        Map<String, Integer> orderCount = new HashMap<>();
+        Map<String, Double> revenueCount = new HashMap<>();
+
+        for (Order order : orders) {
+            for (OrderItem item : order.getOrderItems()) {
+                String category = item.getMenuItem().getCategory();
+                orderCount.merge(category, 1, Integer::sum);
+                revenueCount.merge(category, 
+                    item.getQuantity() * item.getMenuItem().getPrice().doubleValue(), 
+                    Double::sum);
+            }
+        }
+
+        // Changed variable name from 'orders' to 'orderTotal' to avoid conflict
+        orderCount.forEach((category, orderTotal) -> {
+            Map<String, Object> categoryData = new HashMap<>();
+            categoryData.put("category", category);
+            categoryData.put("orders", orderTotal);
+            categoryData.put("revenue", revenueCount.get(category));
+            performance.add(categoryData);
+        });
+
+        return performance;
+    }
+
+    public List<Map<String, Object>> getPeakHours(Long adminId) {
+        List<Map<String, Object>> peakHours = new ArrayList<>();
+        List<Order> orders = orderRepository.findByAdminId(adminId);
+
+        Map<String, Integer> hourlyOrders = new HashMap<>();
+
+        for (Order order : orders) {
+            String hour = order.getOrderDate().format(DateTimeFormatter.ofPattern("HH:00"));
+            hourlyOrders.merge(hour, 1, Integer::sum);
+        }
+
+        hourlyOrders.forEach((hour, count) -> {
+            Map<String, Object> hourData = new HashMap<>();
+            hourData.put("hour", hour);
+            hourData.put("orders", count);
+            peakHours.add(hourData);
+        });
+
+        return peakHours;
+    }
+
+    public List<Map<String, Object>> getWeeklyTrends(Long adminId) {
+        List<Map<String, Object>> trends = new ArrayList<>();
+        List<Order> orders = orderRepository.findByAdminId(adminId);
+
+        Map<String, Integer> dailyOrders = new HashMap<>();
+        Map<String, Double> dailyRevenue = new HashMap<>();
+
+        for (Order order : orders) {
+            String day = order.getOrderDate().getDayOfWeek().toString();
+            dailyOrders.merge(day, 1, Integer::sum);
+            // Convert BigDecimal to Double
+            dailyRevenue.merge(day, order.getTotalAmount().doubleValue(), Double::sum);
+        }
+
+        dailyOrders.forEach((day, orderCount) -> {
+            Map<String, Object> dayData = new HashMap<>();
+            dayData.put("day", day);
+            dayData.put("orders", orderCount);
+            dayData.put("revenue", dailyRevenue.get(day));
+            trends.add(dayData);
+        });
+
+        return trends;
+    }
+
+    public double getAverageOrderValue(Long adminId) {
+        List<Order> orders = orderRepository.findByAdminId(adminId);
+        if (orders.isEmpty()) {
+            return 0.0;
+        }
+        double totalValue = orders.stream()
+                .map(Order::getTotalAmount)
+                .map(BigDecimal::doubleValue)
+                .mapToDouble(Double::valueOf)
+                .sum();
+        return totalValue / orders.size();
+    }
 }
+
+
+
+
+

@@ -9,8 +9,11 @@ import java.util.List;
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findByAdminId(Long adminId);
-    List<Order> findByAdminIdOrderByCreatedAtDesc(Long adminId);
-    List<Order> findByAdminIdAndPaymentMethod(Long adminId, String paymentMethod);
     Long countByAdminId(Long adminId);
-    List<Order> findTop5ByAdminIdOrderByCreatedAtDesc(Long adminId);  // Added this method
+    List<Order> findByAdminIdAndPaymentMethod(Long adminId, String paymentMethod);
+    List<Order> findByAdminIdOrderByCreatedAtDesc(Long adminId);
+    Integer countByCustomerId(Long customerId);
+    
+    // Add this new method
+    List<Order> findTop5ByAdminIdOrderByCreatedAtDesc(Long adminId);
 }

@@ -297,6 +297,15 @@ The frontend is already configured for Vercel deployment. Update the API base UR
 NEXT_PUBLIC_API_BASE_URL=https://your-backend-url.onrender.com
 ```
 
+## Live Demo
+
+- **Frontend**: https://credit-management-system.vercel.app
+- **Backend API**: https://credit-management-system-40i5.onrender.com
+
+### Default Admin Credentials
+- **Username**: admin
+- **Password**: admin123
+
 ## Contributing
 
 1. Fork the repository

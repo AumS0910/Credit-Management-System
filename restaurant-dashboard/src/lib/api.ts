@@ -9,7 +9,7 @@ console.log('🔧 API Configuration:', {
 export const API_URL = `${API_BASE_URL}/api`
 
 export const getApiUrl = (endpoint: string) => {
-  const url = `${API_BASE_URL}/api${endpoint}`
+  const url = `${API_BASE_URL}/${endpoint}`
   console.log('🔗 API Call URL:', url)
   return url
 }

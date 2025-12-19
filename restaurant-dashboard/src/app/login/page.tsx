@@ -5,7 +5,7 @@ import { FaFacebookF, FaGooglePlusG, FaLinkedinIn, FaUser, FaLock, FaEnvelope } 
 import { useRouter } from 'next/navigation'
 import styles from './login.module.css'
 
-const API_URL = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
+const API_URL = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://credit-management-system-40i5.onrender.com'}/api`
 
 const LoginPage: React.FC = () => {
   const router = useRouter()

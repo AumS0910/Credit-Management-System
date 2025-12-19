@@ -196,6 +196,7 @@
     padding: 6px 15px;
     margin: 8px 0;
     width: 100%;
+    color: #333; /* Ensure text is visible */
 }
 
 .container {
@@ -558,6 +559,7 @@
   outline: none;
   width: 100%;
   font-size: 14px;
+  color: #333; /* Ensure text is visible */
 }
 
 .button {

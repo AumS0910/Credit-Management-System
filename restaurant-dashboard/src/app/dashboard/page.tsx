@@ -32,7 +32,7 @@ export default function DashboardPage() {
         if (!adminData) return;
         
         const { id } = JSON.parse(adminData);
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/dashboard/${id}`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://credit-management-system-40i5.onrender.com'}/api/dashboard/${id}`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }

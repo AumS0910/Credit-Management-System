@@ -33,7 +33,7 @@
   }
 
   .account-input input {
-    @apply bg-transparent border-none outline-none w-full;
+    @apply bg-transparent border-none outline-none w-full text-gray-900;
   }
 
   .forgot {

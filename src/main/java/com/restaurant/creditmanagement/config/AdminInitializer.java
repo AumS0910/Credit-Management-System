@@ -3,12 +3,13 @@ package com.restaurant.creditmanagement.config;
 import com.restaurant.creditmanagement.model.Admin;
 import com.restaurant.creditmanagement.repository.AdminRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @Component
-public class AdminInitializer implements CommandLineRunner {
+public class AdminInitializer {
 
     @Autowired
     private AdminRepository adminRepository;
@@ -16,8 +17,8 @@ public class AdminInitializer implements CommandLineRunner {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    @Override
-    public void run(String... args) throws Exception {
+    @EventListener(ApplicationReadyEvent.class)
+    public void initializeAdmin() {
         // Ensure that the default admin is created only if it doesn't exist already
         try {
             Admin existingAdmin = adminRepository.findByUsername("admin");

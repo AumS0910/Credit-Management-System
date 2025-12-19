@@ -17,28 +17,9 @@ public class AdminInitializer {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    @EventListener(ApplicationReadyEvent.class)
-    public void initializeAdmin() {
-        // Ensure that the default admin is created only if it doesn't exist already
-        try {
-            Admin existingAdmin = adminRepository.findByUsername("admin");
-            if (existingAdmin == null) {
-                Admin admin = new Admin();
-                admin.setUsername("admin");
-                admin.setPassword(passwordEncoder.encode("admin123")); // Ensure password is encoded
-                admin.setName("System Administrator");
-                admin.setActive(true);
-
-                adminRepository.save(admin); // Save the admin to the database
-                System.out.println("Default admin created successfully!");
-            } else {
-                System.out.println("Default admin already exists.");
-            }
-        } catch (Exception e) {
-            System.err.println("Error initializing admin: " + e.getMessage());
-            e.printStackTrace();
-            // Don't fail the application startup if admin initialization fails
-            System.err.println("Continuing startup without admin initialization...");
-        }
-    }
+    // Temporarily disabled to allow application startup
+    // @EventListener(ApplicationReadyEvent.class)
+    // public void initializeAdmin() {
+    //     // Admin initialization code...
+    // }
 }

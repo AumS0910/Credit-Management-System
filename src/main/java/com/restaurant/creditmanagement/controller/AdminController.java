@@ -10,6 +10,7 @@ import com.restaurant.creditmanagement.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +24,9 @@ import java.util.*;
 public class AdminController {
     @Autowired
     private AdminService adminService;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     // Remove the GET /register endpoint (not needed for SPA)
     // @GetMapping("/register") <- Remove this
@@ -46,6 +50,9 @@ public class AdminController {
                         Collections.singletonMap("error", "Username already exists")
                 );
             }
+
+            // Encode password before saving
+            admin.setPassword(passwordEncoder.encode(admin.getPassword()));
 
             // Set admin properties
             admin.setActive(true);
@@ -78,7 +85,7 @@ public class AdminController {
         try {
             Optional<Admin> existingAdmin = adminService.findByUsername(admin.getUsername());
 
-            if (existingAdmin.isPresent() && existingAdmin.get().getPassword().equals(admin.getPassword())) {
+            if (existingAdmin.isPresent() && passwordEncoder.matches(admin.getPassword(), existingAdmin.get().getPassword())) {
                 Admin loggedInAdmin = existingAdmin.get();
 
                 // Generate token (in production use JWT)

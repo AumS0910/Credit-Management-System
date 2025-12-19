@@ -28,7 +28,18 @@ public class AdminInitializer {
         System.out.println("🔍 DEBUG: spring.data.mongodb.uri property = " + mongoUri);
         System.out.println("🔍 DEBUG: MONGODB_URI environment variable = " + envVar);
 
-        if (mongoUri == null || mongoUri.isEmpty() || mongoUri.equals("${MONGODB_URI}")) {
+        // Check if MongoDB is properly configured
+        boolean isConfigured = false;
+        if (mongoUri != null && !mongoUri.isEmpty() && !mongoUri.equals("${MONGODB_URI}")) {
+            isConfigured = true;
+        } else if (envVar != null && !envVar.isEmpty()) {
+            // If property is not resolved but env var exists, try to set it
+            System.setProperty("spring.data.mongodb.uri", envVar);
+            System.out.println("🔧 INFO: Set spring.data.mongodb.uri from environment variable");
+            isConfigured = true;
+        }
+
+        if (!isConfigured) {
             System.err.println("❌ ERROR: MongoDB URI not properly configured!");
             System.err.println("💡 Set MONGODB_URI environment variable in Render");
             return; // Don't try to initialize admin if DB is not configured

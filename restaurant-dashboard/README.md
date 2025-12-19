@@ -13,7 +13,7 @@ The dashboard provides a modern, responsive interface for managing restaurant op
 
 ## Tech Stack
 
-- Next.js 15
+- Next.js 15.4.0
 - TypeScript
 - Tailwind CSS
 - Shadcn UI

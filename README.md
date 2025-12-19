@@ -17,7 +17,7 @@ A comprehensive restaurant management system with credit tracking capabilities, 
 ## Tech Stack
 
 ### Frontend
-- **Next.js 15** - React framework for the dashboard
+- **Next.js 15.4.0** - React framework for the dashboard
 - **TypeScript** - Type-safe JavaScript
 - **Tailwind CSS** - Utility-first CSS framework
 - **Shadcn UI** - Modern component library

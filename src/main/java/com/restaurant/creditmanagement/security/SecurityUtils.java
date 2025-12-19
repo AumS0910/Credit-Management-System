@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class SecurityUtils {
     
-    public Long getCurrentAdminId() {
+    public String getCurrentAdminId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.getPrincipal() instanceof Admin) {
             return ((Admin) authentication.getPrincipal()).getId();

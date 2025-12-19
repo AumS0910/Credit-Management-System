@@ -1,55 +1,43 @@
 package com.restaurant.creditmanagement.model;
 
-import javax.persistence.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "transactions")
+@Document(collection = "transactions")
 public class Transaction {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
-    @Column(name = "customer_id")
-    private Long customerId;
+    private String customerId;
 
-    @Column(precision = 10, scale = 2)
     private BigDecimal amount;
 
-    @Column(length = 50)
     private String type;
 
-    @Column(length = 20)
     private String status;
 
-    @Column(length = 255)
     private String notes;
 
-    @Column(name = "admin_id")
-    private Long adminId;
+    private String adminId;
 
-    @Column(name = "transaction_date")
     private LocalDateTime transactionDate;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "customer_id", insertable = false, updatable = false)
-    private Customer customer;
-
     // Getters and Setters
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
-    public Long getCustomerId() {
+    public String getCustomerId() {
         return customerId;
     }
 
-    public void setCustomerId(Long customerId) {
+    public void setCustomerId(String customerId) {
         this.customerId = customerId;
     }
 
@@ -85,11 +73,11 @@ public class Transaction {
         this.notes = notes;
     }
 
-    public Long getAdminId() {
+    public String getAdminId() {
         return adminId;
     }
 
-    public void setAdminId(Long adminId) {
+    public void setAdminId(String adminId) {
         this.adminId = adminId;
     }
 

@@ -359,7 +359,7 @@ The frontend is configured for Vercel deployment.
 
 ## Live Demo
 
-- **Frontend**: https://credit-management-system.vercel.app
+- **Frontend**: https://credit-management-system.vercel.app/
 - **Backend API**: https://credit-management-system-40i5.onrender.com
 
 ### Default Admin Credentials

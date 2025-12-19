@@ -5,6 +5,6 @@ import java.util.List;
 
 public interface TransactionService {
     Transaction saveTransaction(Transaction transaction);
-    List<Transaction> getTransactionsByCustomerId(Long customerId);
-    List<Transaction> getTransactionsByAdminId(Long adminId);
+    List<Transaction> getTransactionsByCustomerId(String customerId);
+    List<Transaction> getTransactionsByAdminId(String adminId);
 }

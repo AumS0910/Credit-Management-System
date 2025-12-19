@@ -8,29 +8,19 @@ import java.util.Date;
 public class Admin {
     @Id
     private String id;
-    
-    @Column(nullable = false, unique = true)
+
     private String username;
-    
-    @Column(nullable = false)
     private String password;
-    
-    @Column(nullable = false)
     private String name;
-    
-    @Column(nullable = false)
     private Boolean active = true;
-    
-    @CreationTimestamp
-    @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
 
     // Getters and Setters
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 

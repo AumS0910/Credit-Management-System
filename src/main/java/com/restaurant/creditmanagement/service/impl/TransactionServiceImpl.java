@@ -20,12 +20,12 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    public List<Transaction> getTransactionsByCustomerId(Long customerId) {
+    public List<Transaction> getTransactionsByCustomerId(String customerId) {
         return transactionRepository.findByCustomerIdOrderByTransactionDateDesc(customerId);
     }
 
     @Override
-    public List<Transaction> getTransactionsByAdminId(Long adminId) {
+    public List<Transaction> getTransactionsByAdminId(String adminId) {
         return transactionRepository.findByAdminIdOrderByTransactionDateDesc(adminId);
     }
 }

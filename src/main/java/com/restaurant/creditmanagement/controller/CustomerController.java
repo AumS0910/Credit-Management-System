@@ -44,8 +44,7 @@ public class CustomerController {
     @GetMapping
     public ResponseEntity<List<Customer>> listCustomers(@RequestHeader("Admin-ID") String adminIdStr) {
         try {
-            Long adminId = Long.parseLong(adminIdStr);
-            List<Customer> customers = customerService.getAllCustomers(adminId);
+            List<Customer> customers = customerService.getAllCustomers(adminIdStr);
             return ResponseEntity.ok(customers);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -54,13 +53,12 @@ public class CustomerController {
 
     @PostMapping("/add")
     public ResponseEntity<?> addCustomer(@RequestBody Customer customer,
-                                         @RequestHeader("Admin-ID") String adminIdStr) {
+                                          @RequestHeader("Admin-ID") String adminIdStr) {
         try {
-            Long adminId = Long.parseLong(adminIdStr);
             customer.setCreditBalance(BigDecimal.ZERO); // Set initial balance to 0
             customer.setActive(true);
-            customer.setAdminId(adminId);
-            Customer savedCustomer = customerService.createCustomer(customer, adminId);
+            customer.setAdminId(adminIdStr);
+            Customer savedCustomer = customerService.createCustomer(customer, adminIdStr);
             return ResponseEntity.ok(savedCustomer);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -69,7 +67,7 @@ public class CustomerController {
     }
 
     @DeleteMapping("/{id}/delete")
-    public ResponseEntity<?> deleteCustomer(@PathVariable Long id) {
+    public ResponseEntity<?> deleteCustomer(@PathVariable String id) {
         try {
             customerService.deleteCustomer(id);
             return ResponseEntity.ok().build();
@@ -80,10 +78,10 @@ public class CustomerController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<Customer>> searchCustomers(@RequestParam String query) {
+    public ResponseEntity<List<Customer>> searchCustomers(@RequestParam String query,
+                                                         @RequestHeader("Admin-ID") String adminIdStr) {
         try {
-            Long adminId = 1L; // TODO: Get this from security context
-            List<Customer> customers = customerService.searchCustomers(query, adminId);
+            List<Customer> customers = customerService.searchCustomers(query, adminIdStr);
             return ResponseEntity.ok(customers);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -95,11 +93,10 @@ public class CustomerController {
     
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getCustomer(@PathVariable Long id, 
-                                       @RequestHeader("Admin-ID") String adminIdStr) {
+    public ResponseEntity<?> getCustomer(@PathVariable String id,
+                                        @RequestHeader("Admin-ID") String adminIdStr) {
         try {
-            Long adminId = Long.parseLong(adminIdStr);
-            Optional<Customer> customer = customerService.getCustomerById(id, adminId);
+            Optional<Customer> customer = customerService.getCustomerById(id, adminIdStr);
             return customer.map(ResponseEntity::ok)
                     .orElse(ResponseEntity.notFound().build());
         } catch (Exception e) {
@@ -109,13 +106,12 @@ public class CustomerController {
     }
 
     @PutMapping("/{id}/update")
-    public ResponseEntity<?> updateCustomer(@PathVariable Long id, 
-                                          @RequestBody Customer customer,
-                                          @RequestHeader("Admin-ID") String adminIdStr) {
+    public ResponseEntity<?> updateCustomer(@PathVariable String id,
+                                           @RequestBody Customer customer,
+                                           @RequestHeader("Admin-ID") String adminIdStr) {
         try {
-            Long adminId = Long.parseLong(adminIdStr);
-            Optional<Customer> existingCustomerOpt = customerService.getCustomerById(id, adminId);
-            
+            Optional<Customer> existingCustomerOpt = customerService.getCustomerById(id, adminIdStr);
+
             if (!existingCustomerOpt.isPresent()) {
                 return ResponseEntity.notFound().build();
             }
@@ -134,7 +130,7 @@ public class CustomerController {
                 existingCustomer.setTotalCredit(customer.getTotalCredit());
             }
 
-            Customer updatedCustomer = customerService.updateCustomer(existingCustomer, adminId);
+            Customer updatedCustomer = customerService.updateCustomer(existingCustomer, adminIdStr);
             return ResponseEntity.ok(updatedCustomer);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -144,42 +140,41 @@ public class CustomerController {
 
     @PostMapping("/{id}/settle")
         public ResponseEntity<?> settleBalance(
-                @PathVariable Long id,
+                @PathVariable String id,
                 @RequestBody Transaction transaction,
                 @RequestHeader("Admin-ID") String adminIdStr) {
             try {
-                Long adminId = Long.parseLong(adminIdStr);
-                Optional<Customer> customerOpt = customerService.getCustomerById(id, adminId);
-                
+                Optional<Customer> customerOpt = customerService.getCustomerById(id, adminIdStr);
+
                 if (!customerOpt.isPresent()) {
                     return ResponseEntity.notFound().build();
                 }
-    
+
                 Customer customer = customerOpt.get();
                 BigDecimal settlementAmount = transaction.getAmount();
-                
+
                 // Validate settlement amount
-                if (settlementAmount.compareTo(BigDecimal.ZERO) <= 0 || 
+                if (settlementAmount.compareTo(BigDecimal.ZERO) <= 0 ||
                     settlementAmount.compareTo(customer.getCreditBalance()) > 0) {
                     return ResponseEntity.badRequest()
                         .body("Invalid settlement amount");
                 }
-    
+
                 // Set transaction details
                 transaction.setCustomerId(id);
-                transaction.setType("SETTLEMENT");
+                transaction.setType(TransactionType.SETTLEMENT.toString());
                 transaction.setStatus("COMPLETED");
                 transaction.setTransactionDate(LocalDateTime.now());
-                transaction.setAdminId(adminId);
-                
+                transaction.setAdminId(adminIdStr);
+
                 // Update customer balance
                 BigDecimal newBalance = customer.getCreditBalance().subtract(settlementAmount);
                 customer.setCreditBalance(newBalance);
-                
+
                 // Save transaction and update customer
                 transactionRepository.save(transaction);
-                Customer updatedCustomer = customerService.updateCustomer(customer, adminId);
-                
+                Customer updatedCustomer = customerService.updateCustomer(customer, adminIdStr);
+
                 return ResponseEntity.ok(updatedCustomer);
             } catch (Exception e) {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

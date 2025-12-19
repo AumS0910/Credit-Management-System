@@ -1,13 +1,6 @@
 @charset "utf-8";
 /* CSS Document */
 
-:root {
-  --bg: #F0F4F3;
-  --theme: #3AB19B;
-  --theme-two: #FFFFFF;
-  --text: #697a79;
-}
-
 .loginBody {
     background: #f6f5f7;
     display: flex;

@@ -71,6 +71,11 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 174 75% 46%;
     --radius: 0.75rem;
+    /* Login page variables */
+    --bg: #F0F4F3;
+    --theme: #3AB19B;
+    --theme-two: #FFFFFF;
+    --text: #697a79;
   }
 
   .dark {

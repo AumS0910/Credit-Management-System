@@ -3,6 +3,7 @@ package com.restaurant.creditmanagement.service;
 // Add this import
 import java.time.format.DateTimeFormatter;
 
+import com.restaurant.creditmanagement.model.MenuItem;
 import com.restaurant.creditmanagement.model.Order;
 import com.restaurant.creditmanagement.model.OrderItem;
 import com.restaurant.creditmanagement.repository.OrderItemRepository;
@@ -10,7 +11,6 @@ import com.restaurant.creditmanagement.repository.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.transaction.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -25,7 +25,7 @@ public class OrderService {
     @Autowired
     private OrderRepository orderRepository;
 
-    public BigDecimal calculateTotalRevenue(Long adminId) {
+    public BigDecimal calculateTotalRevenue(String adminId) {
         List<Order> orders = orderRepository.findByAdminId(adminId);
         return orders.stream()
                 .map(Order::getTotalAmount)
@@ -38,80 +38,94 @@ public class OrderService {
     @Autowired
     private OrderItemRepository orderItemRepository;  // Add this line
 
-    @Transactional
-    public Order createOrder(Order order, List<Long> menuItemIds, List<Integer> quantities) {
+    public Order createOrder(Order order, List<String> menuItemIds, List<Integer> quantities) {
         // Set creation timestamp
         order.setCreatedAt(LocalDateTime.now());
-        
+
         // Save the order first
         Order savedOrder = orderRepository.save(order);
-        
+
         // Create and save order items
+        List<String> orderItemIds = new ArrayList<>();
         for (int i = 0; i < menuItemIds.size(); i++) {
             OrderItem orderItem = new OrderItem();
-            orderItem.setOrder(savedOrder);
-            orderItem.setMenuItem(menuItemService.getMenuItemById(menuItemIds.get(i)));
+            orderItem.setOrderId(savedOrder.getId());
+            orderItem.setMenuItemId(menuItemIds.get(i));
             orderItem.setQuantity(quantities.get(i));
-            orderItemRepository.save(orderItem);
+
+            // Get menu item to set unit price
+            MenuItem menuItem = menuItemService.getMenuItemById(menuItemIds.get(i));
+            if (menuItem != null) {
+                orderItem.setUnitPrice(menuItem.getPrice());
+            }
+
+            OrderItem savedItem = orderItemRepository.save(orderItem);
+            orderItemIds.add(savedItem.getId());
         }
-        
+
+        // Update order with order item IDs
+        savedOrder.setOrderItemIds(orderItemIds);
+        orderRepository.save(savedOrder);
+
         return savedOrder;
     }
 
-    public List<Order> getOrdersByAdminId(Long adminId) {
+    public List<Order> getOrdersByAdminId(String adminId) {
         return orderRepository.findByAdminId(adminId);
     }
 
-    public List<Order> getAllOrdersByAdmin(Long adminId) {
+    public List<Order> getAllOrdersByAdmin(String adminId) {
         return orderRepository.findByAdminId(adminId);
     }
 
-    public List<Order> getRecentOrders(Long adminId) {
+    public List<Order> getRecentOrders(String adminId) {
         return orderRepository.findByAdminIdOrderByCreatedAtDesc(adminId)
                 .stream()
                 .limit(5)
                 .collect(Collectors.toList());
     }
 
-    public BigDecimal calculateTotalOutstandingCredit(Long adminId) {
+    public BigDecimal calculateTotalOutstandingCredit(String adminId) {
         List<Order> creditOrders = orderRepository.findByAdminIdAndPaymentMethod(adminId, "CREDIT");
         return creditOrders.stream()
                 .map(Order::getTotalAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    public Long getTotalOrderCount(Long adminId) {
+    public long getTotalOrderCount(String adminId) {
         return orderRepository.countByAdminId(adminId);
     }
 
-    public Order getOrderById(Long id) {
+    public Order getOrderById(String id) {
         return orderRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
     }
 
-    @Transactional
-    public void deleteOrder(Long id) {
+    public void deleteOrder(String id) {
         Order order = getOrderById(id);
         // First delete all associated order items
-        List<OrderItem> orderItems = orderItemRepository.findByOrder(order);
+        List<OrderItem> orderItems = orderItemRepository.findByOrderId(order.getId());
         orderItemRepository.deleteAll(orderItems);
         // Then delete the order
         orderRepository.delete(order);
     }
 
-    @Transactional
-    public void updateOrderQuantities(Long orderId, Map<String, String> quantities) {
+    public void updateOrderQuantities(String orderId, Map<String, String> quantities) {
         Order order = getOrderById(orderId);
         BigDecimal totalAmount = BigDecimal.ZERO;
 
-        for (OrderItem item : order.getOrderItems()) {
-            String quantityStr = quantities.get(item.getId().toString());
-            if (quantityStr != null) {
-                int newQuantity = Integer.parseInt(quantityStr);
-                item.setQuantity(newQuantity);
-                BigDecimal itemPrice = item.getMenuItem().getPrice();
-                BigDecimal itemTotal = itemPrice.multiply(BigDecimal.valueOf(newQuantity));
-                totalAmount = totalAmount.add(itemTotal);
+        for (String orderItemId : order.getOrderItemIds()) {
+            OrderItem item = orderItemRepository.findById(orderItemId).orElse(null);
+            if (item != null) {
+                String quantityStr = quantities.get(item.getId());
+                if (quantityStr != null) {
+                    int newQuantity = Integer.parseInt(quantityStr);
+                    item.setQuantity(newQuantity);
+                    BigDecimal itemPrice = item.getUnitPrice();
+                    BigDecimal itemTotal = itemPrice.multiply(BigDecimal.valueOf(newQuantity));
+                    totalAmount = totalAmount.add(itemTotal);
+                    orderItemRepository.save(item);
+                }
             }
         }
 
@@ -119,12 +133,11 @@ public class OrderService {
         orderRepository.save(order);
     }
 
-    @Transactional
     public Order updateOrder(Order order) {
         if (order.getId() == null) {
             throw new IllegalArgumentException("Order ID cannot be null");
         }
-        
+
         // Verify order exists
         Order existingOrder = getOrderById(order.getId());
         if (existingOrder == null) {
@@ -134,7 +147,7 @@ public class OrderService {
         // Save the updated order
         return orderRepository.save(order);
     }
-    public List<Map<String, Object>> getTopSellingItems(Long adminId) {
+    public List<Map<String, Object>> getTopSellingItems(String adminId) {
         List<Map<String, Object>> topItems = new ArrayList<>();
         List<Order> orders = orderRepository.findByAdminId(adminId);
 
@@ -142,13 +155,18 @@ public class OrderService {
         Map<String, Double> revenueMap = new HashMap<>();
 
         for (Order order : orders) {
-            // Changed from getItems() to getOrderItems()
-            for (OrderItem item : order.getOrderItems()) {
-                String itemName = item.getMenuItem().getName();
-                quantityMap.merge(itemName, item.getQuantity(), Integer::sum);
-                revenueMap.merge(itemName, 
-                    item.getQuantity() * item.getMenuItem().getPrice().doubleValue(), 
-                    Double::sum);
+            for (String orderItemId : order.getOrderItemIds()) {
+                OrderItem item = orderItemRepository.findById(orderItemId).orElse(null);
+                if (item != null) {
+                    MenuItem menuItem = menuItemService.getMenuItemById(item.getMenuItemId());
+                    if (menuItem != null) {
+                        String itemName = menuItem.getName();
+                        quantityMap.merge(itemName, item.getQuantity(), Integer::sum);
+                        revenueMap.merge(itemName,
+                            item.getQuantity() * item.getUnitPrice().doubleValue(),
+                            Double::sum);
+                    }
+                }
             }
         }
 
@@ -164,7 +182,7 @@ public class OrderService {
         return topItems;
     }
 
-    public List<Map<String, Object>> getCategoryPerformance(Long adminId) {
+    public List<Map<String, Object>> getCategoryPerformance(String adminId) {
         List<Map<String, Object>> performance = new ArrayList<>();
         List<Order> orders = orderRepository.findByAdminId(adminId);
 
@@ -172,16 +190,21 @@ public class OrderService {
         Map<String, Double> revenueCount = new HashMap<>();
 
         for (Order order : orders) {
-            for (OrderItem item : order.getOrderItems()) {
-                String category = item.getMenuItem().getCategory();
-                orderCount.merge(category, 1, Integer::sum);
-                revenueCount.merge(category, 
-                    item.getQuantity() * item.getMenuItem().getPrice().doubleValue(), 
-                    Double::sum);
+            for (String orderItemId : order.getOrderItemIds()) {
+                OrderItem item = orderItemRepository.findById(orderItemId).orElse(null);
+                if (item != null) {
+                    MenuItem menuItem = menuItemService.getMenuItemById(item.getMenuItemId());
+                    if (menuItem != null) {
+                        String category = menuItem.getCategory();
+                        orderCount.merge(category, 1, Integer::sum);
+                        revenueCount.merge(category,
+                            item.getQuantity() * item.getUnitPrice().doubleValue(),
+                            Double::sum);
+                    }
+                }
             }
         }
 
-        // Changed variable name from 'orders' to 'orderTotal' to avoid conflict
         orderCount.forEach((category, orderTotal) -> {
             Map<String, Object> categoryData = new HashMap<>();
             categoryData.put("category", category);
@@ -193,7 +216,7 @@ public class OrderService {
         return performance;
     }
 
-    public List<Map<String, Object>> getPeakHours(Long adminId) {
+    public List<Map<String, Object>> getPeakHours(String adminId) {
         List<Map<String, Object>> peakHours = new ArrayList<>();
         List<Order> orders = orderRepository.findByAdminId(adminId);
 
@@ -214,7 +237,7 @@ public class OrderService {
         return peakHours;
     }
 
-    public List<Map<String, Object>> getWeeklyTrends(Long adminId) {
+    public List<Map<String, Object>> getWeeklyTrends(String adminId) {
         List<Map<String, Object>> trends = new ArrayList<>();
         List<Order> orders = orderRepository.findByAdminId(adminId);
 
@@ -239,7 +262,7 @@ public class OrderService {
         return trends;
     }
 
-    public double getAverageOrderValue(Long adminId) {
+    public double getAverageOrderValue(String adminId) {
         List<Order> orders = orderRepository.findByAdminId(adminId);
         if (orders.isEmpty()) {
             return 0.0;

@@ -38,14 +38,14 @@ public class OrderController {
 
     @PostMapping
     public ResponseEntity<?> createOrder(@RequestBody OrderRequest orderRequest,
-                                       @RequestHeader("Admin-ID") Long adminId) {
+                                        @RequestHeader("Admin-ID") String adminId) {
         try {
             Customer customer = customerService.getCustomerById(orderRequest.getCustomerId(), adminId)
                     .orElseThrow(() -> new IllegalArgumentException("Customer not found"));
 
             Order order = new Order();
             order.setAdminId(adminId);
-            order.setCustomer(customer);
+            order.setCustomerId(orderRequest.getCustomerId());
             order.setPaymentMethod(orderRequest.getPaymentMethod());
             order.setNotes(orderRequest.getNotes());
             order.setTax(orderRequest.getTax());
@@ -82,7 +82,7 @@ public class OrderController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Order>> getOrders(@RequestHeader("Admin-ID") Long adminId) {
+    public ResponseEntity<List<Order>> getOrders(@RequestHeader("Admin-ID") String adminId) {
         try {
             List<Order> orders = orderService.getOrdersByAdminId(adminId);
             return ResponseEntity.ok(orders);
@@ -92,8 +92,8 @@ public class OrderController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Order> getOrder(@PathVariable Long id,
-                                        @RequestHeader("Admin-ID") Long adminId) {
+    public ResponseEntity<Order> getOrder(@PathVariable String id,
+                                         @RequestHeader("Admin-ID") String adminId) {
         try {
             Order order = orderService.getOrderById(id);
             if (order.getAdminId().equals(adminId)) {
@@ -106,8 +106,8 @@ public class OrderController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteOrder(@PathVariable Long id,
-                                       @RequestHeader("Admin-ID") Long adminId) {
+    public ResponseEntity<?> deleteOrder(@PathVariable String id,
+                                        @RequestHeader("Admin-ID") String adminId) {
         try {
             Order order = orderService.getOrderById(id);
             if (!order.getAdminId().equals(adminId)) {
@@ -121,9 +121,9 @@ public class OrderController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateOrder(@PathVariable Long id,
-                                       @RequestBody Order updatedOrder,
-                                       @RequestHeader("Admin-ID") Long adminId) {
+    public ResponseEntity<?> updateOrder(@PathVariable String id,
+                                        @RequestBody Order updatedOrder,
+                                        @RequestHeader("Admin-ID") String adminId) {
         try {
             Order existingOrder = orderService.getOrderById(id);
             if (!existingOrder.getAdminId().equals(adminId)) {
@@ -143,8 +143,8 @@ public class OrderController {
     }
     @Data
     static class OrderRequest {
-        private Long customerId;
-        private List<Long> menuItemIds;
+        private String customerId;
+        private List<String> menuItemIds;
         private List<Integer> quantities;
         private String paymentMethod;
         private String notes;

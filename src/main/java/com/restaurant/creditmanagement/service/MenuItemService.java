@@ -33,7 +33,7 @@ public class MenuItemService {
         return menuItemRepository.save(menuItem);
     }
     
-    public MenuItem updateExistingMenuItem(Long id, MenuItem updatedMenuItem) {
+    public MenuItem updateExistingMenuItem(String id, MenuItem updatedMenuItem) {
         return menuItemRepository.findById(id)
                 .map(existingItem -> {
                     existingItem.setName(updatedMenuItem.getName());
@@ -49,21 +49,19 @@ public class MenuItemService {
                 .orElseThrow(() -> new RuntimeException("Menu item not found with id: " + id));
     }
 
-    // Add this new method
     public MenuItem saveMenuItem(MenuItem menuItem) {
         return menuItemRepository.save(menuItem);
     }
 
-    // Add this new method
-    public List<MenuItem> getAllMenuItems(Long adminId) {
+    public List<MenuItem> getAllMenuItems(String adminId) {
         return menuItemRepository.findByAdminId(adminId);
     }
 
-    public List<MenuItem> getMenuItemsByAdminId(Long adminId) {
+    public List<MenuItem> getMenuItemsByAdminId(String adminId) {
         return menuItemRepository.findByAdminId(adminId);
     }
 
-    public MenuItem getMenuItemById(Long id) {
+    public MenuItem getMenuItemById(String id) {
         return menuItemRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Menu item not found with id: " + id));
     }
@@ -72,15 +70,14 @@ public class MenuItemService {
         return menuItemRepository.save(menuItem);
     }
 
-    // Add this method to MenuItemService
-    public void deleteMenuItem(Long menuItemId, Long adminId) {
+    public void deleteMenuItem(String menuItemId, String adminId) {
         MenuItem menuItem = menuItemRepository.findById(menuItemId)
             .orElseThrow(() -> new RuntimeException("Menu item not found"));
-        
+
         if (!menuItem.getAdminId().equals(adminId)) {
             throw new RuntimeException("Unauthorized to delete this menu item");
         }
-        
+
         menuItemRepository.deleteById(menuItemId);
     }
 }

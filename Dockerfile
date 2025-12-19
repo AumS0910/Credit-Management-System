@@ -24,13 +24,8 @@ COPY --from=build /app/target/credit-management-1.0.0.jar .
 # Expose the port the app runs on
 EXPOSE 8080
 
-# Set environment variables (configure these in your deployment platform)
-# These are default values - override in production deployment
-ENV DATABASE_URL=jdbc:postgresql://localhost:5432/restaurant_db
-ENV DATABASE_USERNAME=postgres
-ENV DATABASE_PASSWORD=password
-ENV SERVER_PORT=8080
-# PEXELS_API_KEY should be set in deployment environment variables
+# Environment variables will be set by the deployment platform (Render)
+# Do not set defaults here to ensure Render variables are used
 
 # Run the application
 CMD ["java", "-jar", "credit-management-1.0.0.jar"]

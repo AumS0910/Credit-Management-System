@@ -28,10 +28,10 @@ A comprehensive restaurant management system with credit tracking capabilities, 
 ### Backend
 - **Spring Boot 2.7.0** - Java framework for REST API
 - **Java 11** - Programming language
-- **MongoDB** - NoSQL database
+- **MongoDB Atlas** - Cloud NoSQL database
 - **Spring Data MongoDB** - MongoDB integration
 - **Spring Security** - Authentication and authorization
-- **Thymeleaf** - Server-side templating (for admin web interface)
+- **BCrypt** - Password hashing
 
 ## Prerequisites
 
@@ -154,13 +154,13 @@ The frontend will start on `http://localhost:3000`
 
 ## Usage
 
-### Admin Registration
-1. Start the backend server
-2. Visit `http://localhost:8080/register` to create an admin account
-3. Or use the API endpoint: `POST /api/admin/register`
+### First Time Setup
+The application automatically creates a default admin user on startup:
+- **Username**: admin
+- **Password**: admin123
 
 ### Accessing the Dashboard
-1. Login at `http://localhost:8080/login` (Thymeleaf interface) or use the API
+1. Login using the API endpoint: `POST /api/login` or use the frontend at `http://localhost:3000`
 2. Access the modern dashboard at `http://localhost:3000`
 
 ### API Endpoints
@@ -245,24 +245,14 @@ npm run build
 ### Local Development Setup
 
 #### Prerequisites
-- PostgreSQL installed locally
 - Java 11
 - Maven
-
-#### Database Setup
-1. **Install PostgreSQL** and start the service
-2. **Create database**:
-   ```sql
-   CREATE DATABASE restaurant_db;
-   CREATE USER postgres WITH PASSWORD 'password';
-   GRANT ALL PRIVILEGES ON DATABASE restaurant_db TO postgres;
-   ```
+- MongoDB (local or Atlas)
 
 #### Run Locally
 
-**Option A: Manual Setup**
 ```bash
-# 1. Start PostgreSQL and create database
+# 1. Set up MongoDB (local or Atlas connection)
 # 2. Backend
 ./mvnw spring-boot:run
 
@@ -271,59 +261,9 @@ cd restaurant-dashboard
 npm run dev
 ```
 
-**Option B: Docker Compose (Easiest)**
-```bash
-# Start everything with Docker Compose
-docker-compose up --build
-
-# Access:
-# Backend: http://localhost:8080
-# Frontend: Run separately with npm run dev
-```
-
 ### Production Deployment
 
-#### Option 1: Docker Deployment (Recommended)
-
-1. **Build and run with Docker**:
-   ```bash
-   # Build the image
-   docker build -t restaurant-backend .
-
-   # Run with local PostgreSQL
-   docker run -p 8080:8080 \
-     -e DATABASE_URL=jdbc:postgresql://host.docker.internal:5432/restaurant_db \
-     -e DATABASE_USERNAME=postgres \
-     -e DATABASE_PASSWORD=password \
-     restaurant-backend
-   ```
-
-2. **Or run with Docker Compose** (create `docker-compose.yml`):
-   ```yaml
-   version: '3.8'
-   services:
-     postgres:
-       image: postgres:13
-       environment:
-         POSTGRES_DB: restaurant_db
-         POSTGRES_USER: postgres
-         POSTGRES_PASSWORD: password
-       ports:
-         - "5432:5432"
-
-     backend:
-       build: .
-       ports:
-         - "8080:8080"
-       environment:
-         DATABASE_URL: jdbc:postgresql://postgres:5432/restaurant_db
-         DATABASE_USERNAME: postgres
-         DATABASE_PASSWORD: password
-       depends_on:
-         - postgres
-   ```
-
-#### Option 2: Cloud Deployment (Render/Heroku/etc.)
+#### Cloud Deployment (Render/Heroku/etc.)
 
 For cloud platforms, set these environment variables:
 
@@ -336,6 +276,7 @@ PEXELS_API_KEY=[your-pexels-api-key]
 **For Render deployment:**
 - Set `MONGODB_URI` in Render environment variables
 - The application will connect to MongoDB Atlas automatically
+- Default admin user is created automatically on first startup
 
 **Note**: MongoDB creates collections automatically. No manual schema setup required.
 
@@ -359,8 +300,8 @@ The frontend is configured for Vercel deployment.
 
 ## Live Demo
 
-- **Frontend**: https://credit-management-system.vercel.app/
-- **Backend API**: https://credit-management-system-40i5.onrender.com
+- **Frontend**: [Deploy your frontend to Vercel/Netlify]
+- **Backend API**: [Your Render deployment URL]
 
 ### Default Admin Credentials
 - **Username**: admin

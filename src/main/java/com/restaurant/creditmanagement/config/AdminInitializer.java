@@ -8,7 +8,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import java.util.Optional;
+import java.util.Date;
 
 @Component
 public class AdminInitializer {
@@ -21,51 +21,27 @@ public class AdminInitializer {
 
     @EventListener(ApplicationReadyEvent.class)
     public void initializeAdmin() {
-        // Debug MongoDB configuration
-        String mongoUri = System.getProperty("spring.data.mongodb.uri");
-        String envVar = System.getenv("MONGODB_URI");
-
-        System.out.println("🔍 DEBUG: spring.data.mongodb.uri property = " + mongoUri);
-        System.out.println("🔍 DEBUG: MONGODB_URI environment variable = " + envVar);
-
-        // Check if MongoDB is properly configured
-        boolean isConfigured = false;
-        if (mongoUri != null && !mongoUri.isEmpty() && !mongoUri.equals("${MONGODB_URI}")) {
-            isConfigured = true;
-        } else if (envVar != null && !envVar.isEmpty()) {
-            // If property is not resolved but env var exists, try to set it
-            System.setProperty("spring.data.mongodb.uri", envVar);
-            System.out.println("🔧 INFO: Set spring.data.mongodb.uri from environment variable");
-            isConfigured = true;
-        }
-
-        if (!isConfigured) {
-            System.err.println("❌ ERROR: MongoDB URI not properly configured!");
-            System.err.println("💡 Set MONGODB_URI environment variable in Render");
-            return; // Don't try to initialize admin if DB is not configured
-        }
-
+        System.out.println("🔄 AdminInitializer: Starting admin initialization...");
         try {
-            System.out.println("Initializing default admin user...");
+            long adminCount = adminRepository.count();
+            System.out.println("🔄 AdminInitializer: Current admin count: " + adminCount);
 
-            Optional<Admin> existingAdminOpt = adminRepository.findByUsername("admin");
-            if (!existingAdminOpt.isPresent()) {
+            if (adminRepository.findByUsername("admin").isEmpty()) {
+                System.out.println("🔄 AdminInitializer: No admin found, creating default admin...");
                 Admin admin = new Admin();
                 admin.setUsername("admin");
                 admin.setPassword(passwordEncoder.encode("admin123"));
                 admin.setName("System Administrator");
                 admin.setActive(true);
-                admin.setCreatedAt(new java.util.Date());
-
-                adminRepository.save(admin);
-                System.out.println("✅ Default admin created successfully!");
+                admin.setCreatedAt(new Date());
+                Admin savedAdmin = adminRepository.save(admin);
+                System.out.println("✅ AdminInitializer: Default admin created with ID: " + savedAdmin.getId());
             } else {
-                System.out.println("ℹ️  Default admin already exists.");
+                System.out.println("✅ AdminInitializer: Default admin already exists");
             }
         } catch (Exception e) {
-            System.err.println("⚠️  Admin initialization failed: " + e.getMessage());
-            System.err.println("📝 Application will continue without admin initialization.");
-            System.err.println("💡 You can create admin users through the API endpoints.");
+            System.err.println("❌ AdminInitializer: Failed to initialize admin: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }

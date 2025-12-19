@@ -3,7 +3,6 @@ package com.restaurant.creditmanagement.config;
 import com.restaurant.creditmanagement.model.Admin;
 import com.restaurant.creditmanagement.repository.AdminRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -14,10 +13,6 @@ import java.util.Optional;
 @Component
 public class AdminInitializer {
 
-    @Value("${spring.data.mongodb.uri}")
-
-    private String mongoUri;
-
     @Autowired
     private AdminRepository adminRepository;
 
@@ -26,8 +21,18 @@ public class AdminInitializer {
 
     @EventListener(ApplicationReadyEvent.class)
     public void initializeAdmin() {
-        System.out.println("🔍 DEBUG: MongoDB URI = " + mongoUri);
-        System.out.println("🔍 DEBUG: MONGODB_URI env var = " + System.getenv("MONGODB_URI"));
+        // Debug MongoDB configuration
+        String mongoUri = System.getProperty("spring.data.mongodb.uri");
+        String envVar = System.getenv("MONGODB_URI");
+
+        System.out.println("🔍 DEBUG: spring.data.mongodb.uri property = " + mongoUri);
+        System.out.println("🔍 DEBUG: MONGODB_URI environment variable = " + envVar);
+
+        if (mongoUri == null || mongoUri.isEmpty() || mongoUri.equals("${MONGODB_URI}")) {
+            System.err.println("❌ ERROR: MongoDB URI not properly configured!");
+            System.err.println("💡 Set MONGODB_URI environment variable in Render");
+            return; // Don't try to initialize admin if DB is not configured
+        }
 
         try {
             System.out.println("Initializing default admin user...");

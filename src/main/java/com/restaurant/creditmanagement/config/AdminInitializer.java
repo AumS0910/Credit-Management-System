@@ -20,7 +20,8 @@ public class AdminInitializer implements CommandLineRunner {
     public void run(String... args) throws Exception {
         // Ensure that the default admin is created only if it doesn't exist already
         try {
-            if (adminRepository.findByUsername("admin") == null) {
+            Admin existingAdmin = adminRepository.findByUsername("admin");
+            if (existingAdmin == null) {
                 Admin admin = new Admin();
                 admin.setUsername("admin");
                 admin.setPassword(passwordEncoder.encode("admin123")); // Ensure password is encoded
@@ -28,11 +29,15 @@ public class AdminInitializer implements CommandLineRunner {
                 admin.setActive(true);
 
                 adminRepository.save(admin); // Save the admin to the database
-                System.out.println("Default admin created!");
+                System.out.println("Default admin created successfully!");
+            } else {
+                System.out.println("Default admin already exists.");
             }
         } catch (Exception e) {
             System.err.println("Error initializing admin: " + e.getMessage());
+            e.printStackTrace();
             // Don't fail the application startup if admin initialization fails
+            System.err.println("Continuing startup without admin initialization...");
         }
     }
 }

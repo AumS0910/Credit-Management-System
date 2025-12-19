@@ -193,81 +193,100 @@ npm run build
 
 ## Deployment
 
-### Backend Deployment on Render
+### Local Development Setup
 
-#### Option 1: Direct Deployment (Recommended)
+#### Prerequisites
+- PostgreSQL installed locally
+- Java 11
+- Maven
 
-##### Prerequisites
-- Render account (https://render.com)
-- PostgreSQL database (you can use Render's PostgreSQL or external provider)
-
-##### Steps to Deploy Backend
-
-1. **Create a PostgreSQL Database on Render**
-   - Go to Render Dashboard → New → PostgreSQL
-   - Choose a name (e.g., `restaurant-db`)
-   - Select region and plan
-   - Note down the connection details
-
-2. **Deploy the Spring Boot Application**
-   - Go to Render Dashboard → New → Web Service
-   - Connect your GitHub repository
-   - Configure the service:
-     - **Name**: `restaurant-backend` (or your choice)
-     - **Environment**: `Java`
-     - **Build Command**: `./mvnw clean install -DskipTests`
-     - **Start Command**: `./mvnw spring-boot:run`
-     - **Root Directory**: Leave empty (deploys from root)
-
-3. **Environment Variables**
-   Set these environment variables in Render:
-
-   ```bash
-   # Database Configuration
-   DATABASE_URL=jdbc:postgresql://[your-db-host]:5432/[your-db-name]
-   DATABASE_USERNAME=[your-db-username]
-   DATABASE_PASSWORD=[your-db-password]
-
-   # Server Configuration
-   SERVER_PORT=8080
-
-   # Pexels API (Optional - for menu image integration)
-   PEXELS_API_KEY=your_pexels_api_key_here
-
-   # JWT Configuration (if implemented)
-   JWT_SECRET=your_jwt_secret_here
+#### Database Setup
+1. **Install PostgreSQL** and start the service
+2. **Create database**:
+   ```sql
+   CREATE DATABASE restaurant_db;
+   CREATE USER postgres WITH PASSWORD 'password';
+   GRANT ALL PRIVILEGES ON DATABASE restaurant_db TO postgres;
    ```
 
-4. **Database Migration**
-   - The application uses Flyway for database migrations
-   - Tables will be created automatically on first run
-   - Initial admin user setup may be required (check AdminInitializer.java)
+#### Run Locally
 
-5. **Deploy**
-   - Click "Create Web Service"
-   - Wait for deployment to complete
-   - Note the service URL (e.g., `https://restaurant-backend.onrender.com`)
+**Option A: Manual Setup**
+```bash
+# 1. Start PostgreSQL and create database
+# 2. Backend
+./mvnw spring-boot:run
 
-#### Option 2: Docker Deployment
+# 3. Frontend (in another terminal)
+cd restaurant-dashboard
+npm run dev
+```
 
-If you prefer using Docker:
+**Option B: Docker Compose (Easiest)**
+```bash
+# Start everything with Docker Compose
+docker-compose up --build
 
-1. **Create PostgreSQL Database** (same as above)
+# Access:
+# Backend: http://localhost:8080
+# Frontend: Run separately with npm run dev
+```
 
-2. **Deploy using Docker**
-   - Go to Render Dashboard → New → Web Service
-   - Connect your GitHub repository
-   - Configure the service:
-     - **Name**: `restaurant-backend` (or your choice)
-     - **Environment**: `Docker`
-     - **Dockerfile Path**: `./Dockerfile` (leave as default)
-     - **Root Directory**: Leave empty
+### Production Deployment
 
-3. **Environment Variables** (same as above)
+#### Option 1: Docker Deployment (Recommended)
 
-4. **Deploy**
-   - The Dockerfile will handle the build process
-   - Wait for deployment to complete
+1. **Build and run with Docker**:
+   ```bash
+   # Build the image
+   docker build -t restaurant-backend .
+
+   # Run with local PostgreSQL
+   docker run -p 8080:8080 \
+     -e DATABASE_URL=jdbc:postgresql://host.docker.internal:5432/restaurant_db \
+     -e DATABASE_USERNAME=postgres \
+     -e DATABASE_PASSWORD=password \
+     restaurant-backend
+   ```
+
+2. **Or run with Docker Compose** (create `docker-compose.yml`):
+   ```yaml
+   version: '3.8'
+   services:
+     postgres:
+       image: postgres:13
+       environment:
+         POSTGRES_DB: restaurant_db
+         POSTGRES_USER: postgres
+         POSTGRES_PASSWORD: password
+       ports:
+         - "5432:5432"
+
+     backend:
+       build: .
+       ports:
+         - "8080:8080"
+       environment:
+         DATABASE_URL: jdbc:postgresql://postgres:5432/restaurant_db
+         DATABASE_USERNAME: postgres
+         DATABASE_PASSWORD: password
+       depends_on:
+         - postgres
+   ```
+
+#### Option 2: Cloud Deployment (Render/Heroku/etc.)
+
+For cloud platforms, set these environment variables:
+
+```bash
+DATABASE_URL=jdbc:postgresql://[your-db-host]:5432/[your-db-name]
+DATABASE_USERNAME=[your-db-username]
+DATABASE_PASSWORD=[your-db-password]
+SERVER_PORT=8080
+PEXELS_API_KEY=[your-pexels-api-key]
+```
+
+**Note**: The application uses Flyway for database migrations. Tables are created automatically on startup.
 
 ### Frontend Deployment
 

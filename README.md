@@ -191,6 +191,93 @@ mvn clean package
 npm run build
 ```
 
+## Deployment
+
+### Backend Deployment on Render
+
+#### Option 1: Direct Deployment (Recommended)
+
+##### Prerequisites
+- Render account (https://render.com)
+- PostgreSQL database (you can use Render's PostgreSQL or external provider)
+
+##### Steps to Deploy Backend
+
+1. **Create a PostgreSQL Database on Render**
+   - Go to Render Dashboard → New → PostgreSQL
+   - Choose a name (e.g., `restaurant-db`)
+   - Select region and plan
+   - Note down the connection details
+
+2. **Deploy the Spring Boot Application**
+   - Go to Render Dashboard → New → Web Service
+   - Connect your GitHub repository
+   - Configure the service:
+     - **Name**: `restaurant-backend` (or your choice)
+     - **Environment**: `Java`
+     - **Build Command**: `./mvnw clean install -DskipTests`
+     - **Start Command**: `./mvnw spring-boot:run`
+     - **Root Directory**: Leave empty (deploys from root)
+
+3. **Environment Variables**
+   Set these environment variables in Render:
+
+   ```bash
+   # Database Configuration
+   DATABASE_URL=jdbc:postgresql://[your-db-host]:5432/[your-db-name]
+   DATABASE_USERNAME=[your-db-username]
+   DATABASE_PASSWORD=[your-db-password]
+
+   # Server Configuration
+   SERVER_PORT=8080
+
+   # Pexels API (Optional - for menu image integration)
+   PEXELS_API_KEY=your_pexels_api_key_here
+
+   # JWT Configuration (if implemented)
+   JWT_SECRET=your_jwt_secret_here
+   ```
+
+4. **Database Migration**
+   - The application uses Flyway for database migrations
+   - Tables will be created automatically on first run
+   - Initial admin user setup may be required (check AdminInitializer.java)
+
+5. **Deploy**
+   - Click "Create Web Service"
+   - Wait for deployment to complete
+   - Note the service URL (e.g., `https://restaurant-backend.onrender.com`)
+
+#### Option 2: Docker Deployment
+
+If you prefer using Docker:
+
+1. **Create PostgreSQL Database** (same as above)
+
+2. **Deploy using Docker**
+   - Go to Render Dashboard → New → Web Service
+   - Connect your GitHub repository
+   - Configure the service:
+     - **Name**: `restaurant-backend` (or your choice)
+     - **Environment**: `Docker`
+     - **Dockerfile Path**: `./Dockerfile` (leave as default)
+     - **Root Directory**: Leave empty
+
+3. **Environment Variables** (same as above)
+
+4. **Deploy**
+   - The Dockerfile will handle the build process
+   - Wait for deployment to complete
+
+### Frontend Deployment
+
+The frontend is already configured for Vercel deployment. Update the API base URL in production:
+
+```bash
+# In restaurant-dashboard/.env.local
+NEXT_PUBLIC_API_BASE_URL=https://your-backend-url.onrender.com
+```
+
 ## Contributing
 
 1. Fork the repository

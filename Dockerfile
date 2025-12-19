@@ -1,21 +1,25 @@
-# Use Eclipse Temurin OpenJDK 11 as the base image
+# Multi-stage build: Maven build stage
+FROM maven:3.9.4-eclipse-temurin-11 AS build
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy pom.xml and download dependencies (cached layer)
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
+
+# Copy source code and build
+COPY src ./src
+RUN mvn clean package -DskipTests
+
+# Runtime stage
 FROM eclipse-temurin:11-jre
 
 # Set the working directory inside the container
 WORKDIR /app
 
-# Copy the Maven wrapper and pom.xml to download dependencies
-COPY mvnw pom.xml ./
-COPY .mvn .mvn
-
-# Download dependencies (this layer will be cached if pom.xml doesn't change)
-RUN ./mvnw dependency:go-offline -B
-
-# Copy the source code
-COPY src ./src
-
-# Build the application
-RUN ./mvnw clean package -DskipTests
+# Copy the built JAR from the build stage
+COPY --from=build /app/target/credit-management-1.0.0.jar .
 
 # Expose the port the app runs on
 EXPOSE 8080
@@ -29,4 +33,4 @@ ENV SERVER_PORT=8080
 # PEXELS_API_KEY should be set in deployment environment variables
 
 # Run the application
-CMD ["java", "-jar", "target/credit-management-1.0.0.jar"]
+CMD ["java", "-jar", "credit-management-1.0.0.jar"]

@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RiUserAddLine, RiMailLine, RiPhoneLine, RiMapPinLine, RiMoneyDollarCircleLine } from "react-icons/ri"
+import { getApiUrl } from "@/lib/api"
 
 export default function AddCustomerPage() {
   const router = useRouter()
@@ -33,7 +34,7 @@ export default function AddCustomerPage() {
       }
 
       const { id: adminId } = JSON.parse(adminData)
-      const response = await fetch("http://localhost:8080/customers/add", {
+      const response = await fetch(getApiUrl("/customers/add"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

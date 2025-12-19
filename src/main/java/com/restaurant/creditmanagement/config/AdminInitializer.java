@@ -22,9 +22,18 @@ public class AdminInitializer {
     @EventListener(ApplicationReadyEvent.class)
     public void initializeAdmin() {
         System.out.println("🔄 AdminInitializer: Starting admin initialization...");
+
+        // Add a small delay to ensure MongoDB is fully connected
         try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        try {
+            System.out.println("🔄 AdminInitializer: Checking MongoDB connection...");
             long adminCount = adminRepository.count();
-            System.out.println("🔄 AdminInitializer: Current admin count: " + adminCount);
+            System.out.println("✅ AdminInitializer: MongoDB connected successfully. Current admin count: " + adminCount);
 
             if (adminRepository.findByUsername("admin").isEmpty()) {
                 System.out.println("🔄 AdminInitializer: No admin found, creating default admin...");
@@ -41,6 +50,7 @@ public class AdminInitializer {
             }
         } catch (Exception e) {
             System.err.println("❌ AdminInitializer: Failed to initialize admin: " + e.getMessage());
+            System.err.println("⚠️ AdminInitializer: This might be due to MongoDB connection issues, but application will continue...");
             e.printStackTrace();
         }
     }

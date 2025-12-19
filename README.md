@@ -301,7 +301,7 @@ The frontend is configured for Vercel deployment.
 ## Live Demo
 
 - **Frontend**: [Deploy your frontend to Vercel/Netlify]
-- **Backend API**: [Your Render deployment URL]
+- **Backend API**: https://credit-management-system-40i5.onrender.com
 
 ### Default Admin Credentials
 - **Username**: admin

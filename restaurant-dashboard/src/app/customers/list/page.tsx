@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { RiUserLine, RiSearchLine, RiAddLine, RiEditLine, RiDeleteBinLine } from "react-icons/ri"
 import { Sidebar } from "@/components/sidebar" // Import Sidebar component
+import { getApiUrl } from "@/lib/api"
 
 interface Customer {
   id: number;
@@ -39,7 +40,7 @@ export default function CustomerListPage() {
       }
 
       const { id } = JSON.parse(adminData)
-      const response = await fetch(`http://localhost:8080/customers`, {
+      const response = await fetch(getApiUrl(`/customers`), {
         headers: {
           'Admin-ID': id.toString()
         }
@@ -63,7 +64,7 @@ export default function CustomerListPage() {
     }
 
     try {
-      const response = await fetch(`http://localhost:8080/customers/search?query=${searchQuery}`)
+      const response = await fetch(getApiUrl(`/customers/search?query=${searchQuery}`))
       if (response.ok) {
         const data = await response.json()
         setCustomers(data)
@@ -84,7 +85,7 @@ export default function CustomerListPage() {
       }
 
       const { id: adminId } = JSON.parse(adminData)
-      const response = await fetch(`http://localhost:8080/customers/${id}/delete`, {
+      const response = await fetch(getApiUrl(`/customers/${id}/delete`), {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -126,7 +127,7 @@ export default function CustomerListPage() {
       }
 
       const { id: adminId } = JSON.parse(adminData)
-      const response = await fetch(`http://localhost:8080/customers/${customerId}/settle`, {
+      const response = await fetch(getApiUrl(`/customers/${customerId}/settle`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -169,7 +170,7 @@ export default function CustomerListPage() {
 
       const { id: adminId } = JSON.parse(adminData)
       // First fetch the customer data
-      const response = await fetch(`http://localhost:8080/customers/${customerId}`, {
+      const response = await fetch(getApiUrl(`/customers/${customerId}`), {
         headers: {
           'Admin-ID': adminId.toString()
         }

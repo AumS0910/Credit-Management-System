@@ -4,8 +4,7 @@ import React, { useState, useCallback, useMemo } from 'react'
 import { FaFacebookF, FaGooglePlusG, FaLinkedinIn, FaUser, FaLock, FaEnvelope } from 'react-icons/fa'
 import { useRouter } from 'next/navigation'
 import styles from './login.module.css'
-
-const API_URL = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://credit-management-system-40i5.onrender.com'}/api`
+import { API_URL } from '@/lib/api'
 
 const LoginPage: React.FC = () => {
   const router = useRouter()

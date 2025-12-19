@@ -15,7 +15,8 @@ CREATE TABLE admins (
     password VARCHAR(255) NOT NULL,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255),
-    phone VARCHAR(255),
+    phone_number VARCHAR(255),
+    restaurant_name VARCHAR(255),
     last_login TIMESTAMP,
     active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP

@@ -28,17 +28,16 @@ A comprehensive restaurant management system with credit tracking capabilities, 
 ### Backend
 - **Spring Boot 2.7.0** - Java framework for REST API
 - **Java 11** - Programming language
-- **PostgreSQL** - Database
-- **Spring Data JPA** - ORM for database operations
+- **MongoDB** - NoSQL database
+- **Spring Data MongoDB** - MongoDB integration
 - **Spring Security** - Authentication and authorization
 - **Thymeleaf** - Server-side templating (for admin web interface)
-- **Flyway** - Database migration tool
 
 ## Prerequisites
 
 - **Node.js** (v18 or higher) - For running the frontend
 - **Java JDK 11** - For running the backend
-- **PostgreSQL** - Database server
+- **MongoDB** - NoSQL database (local or cloud)
 - **Maven** - Build tool for Java projects
 - **Git** - Version control
 
@@ -54,13 +53,64 @@ cd restaurant-credit-management
 ### 2. Backend Setup
 
 #### Database Configuration
-1. Install PostgreSQL and create a database named `restaurant_db`
-2. Update database credentials in `src/main/resources/application.properties`:
+
+**Option A: Local MongoDB**
+1. Install MongoDB locally or use Docker
+2. Database will be created automatically
+
+**Option B: MongoDB Atlas (Cloud)**
+
+#### Step-by-Step MongoDB Atlas Setup:
+
+1. **Create MongoDB Atlas Account**
+   - Go to [MongoDB Atlas](https://www.mongodb.com/atlas)
+   - Click "Try Free" → Sign up with email
+   - Verify your email
+
+2. **Create a New Project**
+   - Click "Create a New Project"
+   - Name: `restaurant-credit-management`
+   - Click "Next" → "Create Project"
+
+3. **Build a Database**
+   - Click "Build a Database"
+   - Choose "M0 Cluster" (Free tier)
+   - Provider: AWS/Azure/GCP (any)
+   - Region: Select closest to you
+   - Cluster Name: `Cluster0` (default)
+   - Click "Create Cluster"
+
+4. **Set Up Database Access**
+   - Go to "Database Access" (left sidebar)
+   - Click "Add New Database User"
+   - Authentication Method: "Password"
+   - Username: `restaurantuser`
+   - Password: Create a strong password (save it!)
+   - Click "Add User"
+
+5. **Configure Network Access**
+   - Go to "Network Access" (left sidebar)
+   - Click "Add IP Address"
+   - Choose "Allow Access from Anywhere" (0.0.0.0/0)
+   - Click "Confirm"
+
+6. **Get Connection String**
+   - Go to "Clusters" → Click "Connect"
+   - Choose "Connect your application"
+   - Driver: "Java"
+   - Version: "4.3 or later"
+   - Copy the connection string
+
+7. **Update Application Configuration**
+   - Replace `<password>` and `<database>` in the connection string
+   - Update `src/main/resources/application.properties`:
    ```properties
-   spring.datasource.url=jdbc:postgresql://localhost:5432/restaurant_db
-   spring.datasource.username=your_username
-   spring.datasource.password=your_password
+   spring.data.mongodb.uri=mongodb+srv://restaurantuser:YOUR_PASSWORD@cluster0.xxxxx.mongodb.net/restaurant_db?retryWrites=true&w=majority
    ```
+
+8. **Test Connection**
+   - Run your application: `./mvnw spring-boot:run`
+   - Check logs for successful MongoDB connection
 
 #### Pexels API Setup (Optional)
 Get an API key from [Pexels](https://www.pexels.com/api/) and add it to `application.properties`:
@@ -152,15 +202,14 @@ The frontend will start on `http://localhost:3000`
 restaurant-credit-management/
 ├── src/main/java/com/restaurant/creditmanagement/  # Backend source
 │   ├── controller/                                 # REST controllers
-│   ├── model/                                      # JPA entities
-│   ├── repository/                                 # Data repositories
+│   ├── model/                                      # MongoDB documents
+│   ├── repository/                                 # MongoDB repositories
 │   ├── service/                                    # Business logic
 │   ├── security/                                   # Security configuration
 │   └── config/                                     # App configuration
 ├── src/main/resources/                             # Resources
 │   ├── templates/                                  # Thymeleaf templates
 │   ├── static/                                     # Static assets
-│   ├── db/migration/                               # Flyway migrations
 │   └── application.properties                      # App configuration
 ├── restaurant-dashboard/                           # Frontend application
 │   ├── src/
@@ -279,14 +328,16 @@ docker-compose up --build
 For cloud platforms, set these environment variables:
 
 ```bash
-DATABASE_URL=jdbc:postgresql://[your-db-host]:5432/[your-db-name]
-DATABASE_USERNAME=[your-db-username]
-DATABASE_PASSWORD=[your-db-password]
+MONGODB_URI=mongodb+srv://restaurantuser:YOUR_PASSWORD@cluster0.xxxxx.mongodb.net/restaurant_db?retryWrites=true&w=majority
 SERVER_PORT=8080
 PEXELS_API_KEY=[your-pexels-api-key]
 ```
 
-**Note**: The application uses Flyway for database migrations. Tables are created automatically on startup.
+**For Render deployment:**
+- Set `MONGODB_URI` in Render environment variables
+- The application will connect to MongoDB Atlas automatically
+
+**Note**: MongoDB creates collections automatically. No manual schema setup required.
 
 ### Frontend Deployment
 

@@ -1,16 +1,15 @@
 package com.restaurant.creditmanagement.model;
 
-import javax.persistence.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 import java.math.BigDecimal;
 
-@Entity
-@Table(name = "menu_items")
+@Document(collection = "menu_items")
 public class MenuItem {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    private Long adminId;
+    private String id;
+    private String adminId; // Changed from Long to String
     private String name;
     private String description;
     private BigDecimal price;

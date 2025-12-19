@@ -1,16 +1,13 @@
 package com.restaurant.creditmanagement.model;
 
-import org.hibernate.annotations.CreationTimestamp;
-import javax.persistence.*;
-import java.time.LocalDateTime;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 import java.util.Date;
 
-@Entity
-@Table(name = "admins")
+@Document(collection = "admins")
 public class Admin {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
     
     @Column(nullable = false, unique = true)
     private String username;

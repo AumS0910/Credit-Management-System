@@ -124,7 +124,7 @@ public class AdminController {
     }
 
     @GetMapping("/admin/{id}")
-    public ResponseEntity<?> getAdminSettings(@PathVariable Long id) {
+    public ResponseEntity<?> getAdminSettings(@PathVariable String id) {
         try {
             Admin admin = adminService.getAdminSettings(id);
             Map<String, Object> response = new HashMap<>();
@@ -133,7 +133,7 @@ public class AdminController {
             response.put("email", admin.getEmail());
             response.put("restaurantName", admin.getRestaurantName());
             response.put("phoneNumber", admin.getPhoneNumber());
-            
+
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -143,7 +143,7 @@ public class AdminController {
 
     @PutMapping("/admin/{id}")
     public ResponseEntity<?> updateAdminSettings(
-            @PathVariable Long id,
+            @PathVariable String id,
             @RequestBody Admin adminDetails) {
         try {
             Admin updatedAdmin = adminService.updateAdminSettings(id, adminDetails);
@@ -154,7 +154,7 @@ public class AdminController {
             response.put("restaurantName", updatedAdmin.getRestaurantName());
             response.put("phoneNumber", updatedAdmin.getPhoneNumber());
             response.put("message", "Settings updated successfully");
-            
+
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

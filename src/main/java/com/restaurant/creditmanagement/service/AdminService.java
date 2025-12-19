@@ -17,8 +17,8 @@ public class AdminService {
 
     public Admin registerAdmin(Admin admin) {
         // Check if username already exists
-        Admin existingAdmin = adminRepository.findByUsername(admin.getUsername());
-        if (existingAdmin != null) {
+        Optional<Admin> existingAdmin = adminRepository.findByUsername(admin.getUsername());
+        if (existingAdmin.isPresent()) {
             throw new RuntimeException("Username already exists");
         }
 
@@ -46,9 +46,12 @@ public class AdminService {
     }
 
     public Admin authenticate(String username, String password) {
-        Admin admin = adminRepository.findByUsername(username);
-        if (admin != null && admin.getPassword().equals(password)) {
-            return admin;
+        Optional<Admin> adminOpt = adminRepository.findByUsername(username);
+        if (adminOpt.isPresent()) {
+            Admin admin = adminOpt.get();
+            if (admin.getPassword().equals(password)) {
+                return admin;
+            }
         }
         return null;
     }
@@ -67,11 +70,11 @@ public class AdminService {
         return false;
     }
 
-    public Optional<Admin> getAdminById(Long id) {
+    public Optional<Admin> getAdminById(String id) {
         return adminRepository.findById(id);
     }
 
-    public void deactivateAdmin(Long id) {
+    public void deactivateAdmin(String id) {
         Optional<Admin> adminOpt = adminRepository.findById(id);
         if (adminOpt.isPresent()) {
             Admin admin = adminOpt.get();
@@ -80,7 +83,7 @@ public class AdminService {
         }
     }
 
-    public void activateAdmin(Long id) {
+    public void activateAdmin(String id) {
         Optional<Admin> adminOpt = adminRepository.findById(id);
         if (adminOpt.isPresent()) {
             Admin admin = adminOpt.get();
@@ -89,14 +92,14 @@ public class AdminService {
         }
     }
 
-    public Admin updateAdminSettings(Long id, Admin adminDetails) {
+    public Admin updateAdminSettings(String id, Admin adminDetails) {
         Optional<Admin> adminOpt = adminRepository.findById(id);
         if (!adminOpt.isPresent()) {
             throw new RuntimeException("Admin not found");
         }
 
         Admin admin = adminOpt.get();
-        
+
         // Update only the allowed fields
         admin.setName(adminDetails.getName());
         admin.setEmail(adminDetails.getEmail());
@@ -106,7 +109,7 @@ public class AdminService {
         return adminRepository.save(admin);
     }
 
-    public Admin getAdminSettings(Long id) {
+    public Admin getAdminSettings(String id) {
         return adminRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Admin not found"));
     }

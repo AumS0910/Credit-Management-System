@@ -5,7 +5,7 @@ import { FaFacebookF, FaGooglePlusG, FaLinkedinIn, FaUser, FaLock, FaEnvelope } 
 import { useRouter } from 'next/navigation'
 import styles from './login.module.css'
 
-const API_URL = 'http://localhost:8080/api'
+const API_URL = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
 
 const LoginPage: React.FC = () => {
   const router = useRouter()

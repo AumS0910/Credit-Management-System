@@ -57,11 +57,11 @@ public class AdminService {
     }
 
     public Optional<Admin> findByUsername(String username) {
-        return Optional.ofNullable(adminRepository.findByUsername(username));
+        return adminRepository.findByUsername(username);
     }
 
     public boolean validateCredentials(String username, String password) {
-        Optional<Admin> adminOpt = Optional.ofNullable(adminRepository.findByUsername(username));
+        Optional<Admin> adminOpt = adminRepository.findByUsername(username);
         if (adminOpt.isPresent()) {
             Admin admin = adminOpt.get();
             // In a real application, you should use proper password hashing

@@ -91,7 +91,7 @@ public class CustomerService {
         // Set transaction details
         settlement.setCustomerId(customerId);
         settlement.setAdminId(adminId);
-        settlement.setType(TransactionType.SETTLEMENT);
+        settlement.setType(TransactionType.SETTLEMENT.toString());
         settlement.setStatus("COMPLETED");
         settlement.setTransactionDate(LocalDateTime.now());
 

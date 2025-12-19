@@ -19,9 +19,9 @@ public class OrderActionController {
     private OrderRepository orderRepository;
 
     @PostMapping("/{id}/start")
-    public String startOrder(@PathVariable Long id, 
-                           RedirectAttributes redirectAttributes,
-                           HttpSession session) {
+    public String startOrder(@PathVariable String id,
+                            RedirectAttributes redirectAttributes,
+                            HttpSession session) {
         if (session.getAttribute("adminId") == null) {
             return "redirect:/login";
         }
@@ -45,9 +45,9 @@ public class OrderActionController {
     }
 
     @PostMapping("/{id}/complete")
-    public String completeOrder(@PathVariable Long id, 
-                              RedirectAttributes redirectAttributes,
-                              HttpSession session) {
+    public String completeOrder(@PathVariable String id,
+                               RedirectAttributes redirectAttributes,
+                               HttpSession session) {
         if (session.getAttribute("adminId") == null) {
             return "redirect:/login";
         }
@@ -71,9 +71,9 @@ public class OrderActionController {
     }
 
     @PostMapping("/{id}/cancel")
-    public String cancelOrder(@PathVariable Long id, 
-                            RedirectAttributes redirectAttributes,
-                            HttpSession session) {
+    public String cancelOrder(@PathVariable String id,
+                             RedirectAttributes redirectAttributes,
+                             HttpSession session) {
         if (session.getAttribute("adminId") == null) {
             return "redirect:/login";
         }

@@ -26,6 +26,15 @@ public class Customer {
     private List<String> orderIds = new ArrayList<>(); // Reference to orders
     private boolean active = true;
 
+    // Explicit getter/setter for boolean field
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
     // Custom getter/setter for creditBalance
     public BigDecimal getCreditBalance() {
         return creditBalance != null ? creditBalance : BigDecimal.ZERO;

@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = {"http://localhost:3000", "https://credit-management-system.vercel.app"})
 public class DashboardController {
     @Autowired
     private OrderService orderService;
@@ -26,11 +26,11 @@ public class DashboardController {
     private CustomerService customerService;
 
     @GetMapping("/dashboard/{adminId}")
-    public ResponseEntity<?> getDashboardStats(@PathVariable Long adminId) {
+    public ResponseEntity<?> getDashboardStats(@PathVariable String adminId) {
         try {
             // Get all customers for this admin
             List<Customer> customers = customerService.getAllCustomers(adminId);
-            
+
             // Calculate total revenue
             BigDecimal totalRevenue = orderService.calculateTotalRevenue(adminId);
 
@@ -40,30 +40,15 @@ public class DashboardController {
                     .filter(balance -> balance.compareTo(BigDecimal.ZERO) > 0)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-            // Get recent customers (last 5 customers with orders)
+            // Get recent customers (last 5 customers)
             List<Map<String, Object>> recentCustomers = customers.stream()
-                .filter(customer -> !customer.getOrders().isEmpty())
-                .sorted((c1, c2) -> {
-                    LocalDateTime lastOrder1 = c1.getOrders().stream()
-                        .map(Order::getOrderDate)
-                        .max(LocalDateTime::compareTo)
-                        .orElse(LocalDateTime.MIN);
-                    LocalDateTime lastOrder2 = c2.getOrders().stream()
-                        .map(Order::getOrderDate)
-                        .max(LocalDateTime::compareTo)
-                        .orElse(LocalDateTime.MIN);
-                    return lastOrder2.compareTo(lastOrder1);
-                })
                 .limit(5)
                 .map(customer -> {
                     Map<String, Object> customerMap = new HashMap<>();
                     customerMap.put("id", customer.getId());
                     customerMap.put("name", customer.getName());
                     customerMap.put("creditBalance", customer.getCreditBalance());
-                    customerMap.put("lastVisit", customer.getOrders().stream()
-                        .map(Order::getOrderDate)
-                        .max(LocalDateTime::compareTo)
-                        .orElse(null));
+                    customerMap.put("createdAt", customer.getCreatedAt());
                     return customerMap;
                 })
                 .collect(Collectors.toList());
@@ -75,7 +60,7 @@ public class DashboardController {
             response.put("customers", customers.size());
             response.put("creditBalance", totalCreditBalance);
             response.put("recentOrders", orderService.getRecentOrders(adminId));
-            response.put("recentCustomers", recentCustomers);  // Add recent customers to response
+            response.put("recentCustomers", recentCustomers);
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {

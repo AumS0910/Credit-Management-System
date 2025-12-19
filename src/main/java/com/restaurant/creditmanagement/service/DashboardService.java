@@ -23,29 +23,33 @@ public class DashboardService {
 
 
 
-    public long getTotalOrders(Long adminId) {
+    public long getTotalOrders(String adminId) {
         return orderRepository.countByAdminId(adminId);
     }
 
 
 
-    public List<Customer> getAllCustomers(Long adminId) {
+    public List<Customer> getAllCustomers(String adminId) {
         return customerRepository.findByAdminId(adminId);
     }
 
-    public List<Customer> getTopCustomers(Long adminId) {
+    public List<Customer> getTopCustomers(String adminId) {
         return customerRepository.findTop5ByAdminIdOrderByCreditBalanceDesc(adminId);
     }
 
-    public BigDecimal getTotalOutstandingCredit(Long adminId) {
-        return customerRepository.getTotalOutstandingCreditByAdminId(adminId);
+    public BigDecimal getTotalOutstandingCredit(String adminId) {
+        List<Customer> customers = customerRepository.findByAdminId(adminId);
+        return customers.stream()
+                .map(Customer::getCreditBalance)
+                .filter(balance -> balance.compareTo(BigDecimal.ZERO) > 0)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    public long getTotalCustomers(Long adminId) {
-        return customerRepository.countCustomersByAdminId(adminId);
+    public long getTotalCustomers(String adminId) {
+        return customerRepository.countByAdminId(adminId);
     }
 
-    public List<Order> getRecentOrders(Long adminId) {
+    public List<Order> getRecentOrders(String adminId) {
         return orderRepository.findTop5ByAdminIdOrderByCreatedAtDesc(adminId);
     }
 }

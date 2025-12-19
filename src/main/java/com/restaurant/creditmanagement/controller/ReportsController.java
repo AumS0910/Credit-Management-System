@@ -15,6 +15,7 @@ import java.time.format.DateTimeFormatter;
 
 @RestController
 @RequestMapping("/api/reports")
+@CrossOrigin(origins = {"http://localhost:3000", "https://credit-management-system.vercel.app"})
 public class ReportsController {
 
     @Autowired
@@ -24,7 +25,7 @@ public class ReportsController {
     private OrderService orderService;
 
     @GetMapping("/detailed")
-    public ResponseEntity<?> getDetailedAnalytics(@RequestHeader("Admin-ID") Long adminId) {
+    public ResponseEntity<?> getDetailedAnalytics(@RequestHeader("Admin-ID") String adminId) {
         if (adminId == null) {
             return ResponseEntity.badRequest().body("Admin ID is required");
         }

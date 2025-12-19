@@ -8,6 +8,8 @@ import org.springframework.context.event.EventListener;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
+
 @Component
 public class AdminInitializer {
 
@@ -21,8 +23,8 @@ public class AdminInitializer {
     public void initializeAdmin() {
         // Ensure that the default admin is created only if it doesn't exist already
         try {
-            Admin existingAdmin = adminRepository.findByUsername("admin");
-            if (existingAdmin == null) {
+            Optional<Admin> existingAdminOpt = adminRepository.findByUsername("admin");
+            if (!existingAdminOpt.isPresent()) {
                 Admin admin = new Admin();
                 admin.setUsername("admin");
                 admin.setPassword(passwordEncoder.encode("admin123")); // Ensure password is encoded

@@ -19,7 +19,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/menu-items")  // Update base path
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = {"http://localhost:3000", "https://credit-management-system.vercel.app"})
 public class MenuController {
     
     @Value("${pexels.api.key}")
@@ -58,10 +58,7 @@ public class MenuController {
                 );
             }
 
-            // Convert adminId from string to Long
-            Long adminIdLong = Long.parseLong(adminId);
-
-            List<MenuItem> menuItems = menuItemService.getAllMenuItems(adminIdLong);
+            List<MenuItem> menuItems = menuItemService.getAllMenuItems(adminId);
             return ResponseEntity.ok(menuItems != null ? menuItems : Collections.emptyList());
         } catch (NumberFormatException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
@@ -125,8 +122,7 @@ public class MenuController {
                 );
             }
 
-            Long adminIdLong = Long.parseLong(adminId);
-            List<MenuItem> menuItems = menuItemService.getAllMenuItems(adminIdLong);
+            List<MenuItem> menuItems = menuItemService.getAllMenuItems(adminId);
             return ResponseEntity.ok(menuItems != null ? menuItems : Collections.emptyList());
         } catch (NumberFormatException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
@@ -141,13 +137,12 @@ public class MenuController {
 
     // Get specific menu item
     @GetMapping("/get/{id}")
-    public ResponseEntity<?> getMenuItem(@PathVariable Long id, 
+    public ResponseEntity<?> getMenuItem(@PathVariable String id,
                                        @RequestHeader("Admin-ID") String adminId) {
         try {
-            Long adminIdLong = Long.parseLong(adminId);
-            MenuItem menuItem = menuItemService.getMenuItemById(id);  // Remove adminId parameter
-            return menuItem != null ? 
-                   ResponseEntity.ok(menuItem) : 
+            MenuItem menuItem = menuItemService.getMenuItemById(id);
+            return menuItem != null ?
+                   ResponseEntity.ok(menuItem) :
                    ResponseEntity.notFound().build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
@@ -158,14 +153,13 @@ public class MenuController {
 
     @PutMapping("/{id}")
     public ResponseEntity<?> updateMenuItem(
-            @PathVariable Long id,
+            @PathVariable String id,
             @RequestBody MenuItem menuItem,
             @RequestHeader("Admin-ID") String adminId) {
         try {
-            Long adminIdLong = Long.parseLong(adminId);
             menuItem.setId(id);
-            menuItem.setAdminId(adminIdLong);
-            
+            menuItem.setAdminId(adminId);
+
             MenuItem updatedItem = menuItemService.updateMenuItem(menuItem);
             return ResponseEntity.ok(updatedItem);
         } catch (Exception e) {
@@ -176,10 +170,10 @@ public class MenuController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteMenuItem(
-            @PathVariable Long id,
+            @PathVariable String id,
             @RequestHeader("Admin-ID") String adminId) {
         try {
-            menuItemService.deleteMenuItem(id, Long.parseLong(adminId));
+            menuItemService.deleteMenuItem(id, adminId);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

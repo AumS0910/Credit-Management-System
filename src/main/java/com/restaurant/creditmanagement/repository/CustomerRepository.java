@@ -20,6 +20,4 @@ public interface CustomerRepository extends MongoRepository<Customer, String> {
     List<Customer> findCreditBalancesByAdminId(String adminId);
 
     long countByAdminId(String adminId);
-
-    Long countByAdminId(String adminId);
 }

@@ -64,13 +64,10 @@ public class Admin {
         this.createdAt = createdAt;
     }
 
-    @Column(nullable = true)
     private String email;
-    
-    @Column(name = "restaurant_name")
+
     private String restaurantName;
-    
-    @Column(name = "phone_number")
+
     private String phoneNumber;
 
     // Add getters and setters for the new fields

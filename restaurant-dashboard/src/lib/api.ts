@@ -1,5 +1,15 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://credit-management-system-40i5.onrender.com'
 
+console.log('🔧 API Configuration:', {
+  NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
+  API_BASE_URL,
+  API_URL: `${API_BASE_URL}/api`
+})
+
 export const API_URL = `${API_BASE_URL}/api`
 
-export const getApiUrl = (endpoint: string) => `${API_BASE_URL}/api${endpoint}`
+export const getApiUrl = (endpoint: string) => {
+  const url = `${API_BASE_URL}/api${endpoint}`
+  console.log('🔗 API Call URL:', url)
+  return url
+}

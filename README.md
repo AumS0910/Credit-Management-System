@@ -290,12 +290,21 @@ PEXELS_API_KEY=[your-pexels-api-key]
 
 ### Frontend Deployment
 
-The frontend is already configured for Vercel deployment. Update the API base URL in production:
+The frontend is configured for Vercel deployment.
 
-```bash
-# In restaurant-dashboard/.env.local
-NEXT_PUBLIC_API_BASE_URL=https://your-backend-url.onrender.com
-```
+#### Setting Environment Variables in Vercel:
+
+1. Go to your Vercel dashboard
+2. Select your project (`credit-management-system`)
+3. Go to **Settings** → **Environment Variables**
+4. Add the following variable:
+   - **Name**: `NEXT_PUBLIC_API_BASE_URL`
+   - **Value**: `https://credit-management-system-40i5.onrender.com`
+   - **Environment**: `Production`, `Preview`, `Development`
+
+5. **Redeploy** the frontend to pick up the new environment variable
+
+**Note**: `.env.local` files are not used in Vercel deployments. Environment variables must be set in the Vercel dashboard.
 
 ## Live Demo
 

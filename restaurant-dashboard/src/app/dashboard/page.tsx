@@ -9,6 +9,7 @@ import { RecentOrders } from "@/components/recent-orders"
 import { RecentCustomers } from "@/components/recent-customers"
 import { PopularItems } from "@/components/popular-items"
 import { useRouter } from "next/navigation"
+import { getApiUrl } from "@/lib/api"
 
 // Update the interface to include recentCustomers
 interface DashboardStats {
@@ -32,7 +33,7 @@ export default function DashboardPage() {
         if (!adminData) return;
         
         const { id } = JSON.parse(adminData);
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://credit-management-system-40i5.onrender.com'}/api/dashboard/${id}`, {
+        const response = await fetch(getApiUrl(`/dashboard/${id}`), {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }

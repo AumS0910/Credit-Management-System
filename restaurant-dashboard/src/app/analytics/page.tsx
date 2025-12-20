@@ -7,6 +7,7 @@ import { Sidebar } from "@/components/sidebar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { RiPieChartLine, RiBarChartGroupedLine, RiCalendarLine } from "react-icons/ri"
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { getApiUrl } from "@/lib/api"
 
 interface AnalyticsData {
   menuAnalytics: {
@@ -40,7 +41,7 @@ export default function AnalyticsPage() {
       if (!adminData) return
       const { id } = JSON.parse(adminData)
 
-      const response = await fetch(`http://localhost:8080/api/reports/detailed`, {
+      const response = await fetch(getApiUrl("/reports/detailed"), {
         headers: {
           "Content-Type": "application/json",
           "Admin-ID": id.toString()

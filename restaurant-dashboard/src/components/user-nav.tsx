@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { RiLogoutBoxLine, RiUser3Line, RiSettings3Line } from "react-icons/ri"
+import { getApiUrl } from "@/lib/api"
 
 export function UserNav() {
   const router = useRouter()
@@ -31,7 +32,7 @@ export function UserNav() {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch("http://localhost:8080/api/logout", {
+      const response = await fetch(getApiUrl("/logout"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

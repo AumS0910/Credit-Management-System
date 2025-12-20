@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Select } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { motion } from "framer-motion"
+import { getApiUrl } from "@/lib/api"
 
 interface OrderData {
   id: number
@@ -37,7 +38,7 @@ export default function EditOrderPage({ params }: { params: Promise<{ id: string
         }
         const { id } = JSON.parse(adminData)
 
-        const response = await fetch(`http://localhost:8080/api/orders/${orderId}`, {
+        const response = await fetch(getApiUrl(`/orders/${orderId}`), {
           headers: {
             "Content-Type": "application/json",
             "Admin-ID": id.toString()
@@ -71,7 +72,7 @@ export default function EditOrderPage({ params }: { params: Promise<{ id: string
       }
       const { id } = JSON.parse(adminData)
 
-      const response = await fetch(`http://localhost:8080/api/orders/${orderId}`, {
+      const response = await fetch(getApiUrl(`/orders/${orderId}`), {
         method: 'PUT',
         headers: {
           "Content-Type": "application/json",

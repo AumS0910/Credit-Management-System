@@ -10,6 +10,7 @@ import { Select } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { RiShoppingBag3Line, RiUserLine, RiMoneyDollarCircleLine, RiAddLine, RiSubtractLine } from "react-icons/ri"
+import { getApiUrl } from "@/lib/api"
 
 interface Customer {
   id: number;
@@ -75,7 +76,7 @@ export default function AddOrderPage() {
       }
       const { id } = JSON.parse(adminData)
 
-      const response = await fetch('http://localhost:8080/customers', {
+      const response = await fetch(getApiUrl('/customers'), {
         headers: {
           "Content-Type": "application/json",
           "Admin-ID": id.toString()
@@ -103,7 +104,7 @@ export default function AddOrderPage() {
       }
       const { id, token } = JSON.parse(adminData)
 
-      const response = await fetch(`http://localhost:8080/api/menu-items`, {
+      const response = await fetch(getApiUrl('/menu-items'), {
         headers: {
           "Content-Type": "application/json",
           "Admin-ID": id.toString(),
@@ -137,13 +138,13 @@ export default function AddOrderPage() {
       const { id } = JSON.parse(adminData)
 
       const [customersRes, menuItemsRes] = await Promise.all([
-        fetch(`http://localhost:8080/customers`, {
+        fetch(getApiUrl('/customers'), {
           headers: {
             "Content-Type": "application/json",
             "Admin-ID": id.toString()
           }
         }),
-        fetch(`http://localhost:8080/api/menu-items/${id}`)
+        fetch(getApiUrl(`/menu-items/${id}`))
       ])
 
       if (customersRes.ok && menuItemsRes.ok) {
@@ -155,7 +156,7 @@ export default function AddOrderPage() {
         }
 
         menuItemsData = await Promise.all(menuItemsData.map(async (item: MenuItem) => {
-          const imageResponse = await fetch(`http://localhost:8080/api/pexels/food-image?name=${encodeURIComponent(item.name)}`)
+          const imageResponse = await fetch(getApiUrl(`/pexels/food-image?name=${encodeURIComponent(item.name)}`))
           if (imageResponse.ok) {
             const imageData = await imageResponse.json()
             return { ...item, imageUrl: imageData.url }
@@ -239,7 +240,7 @@ export default function AddOrderPage() {
         }
       }
 
-      const response = await fetch("http://localhost:8080/api/orders", {
+      const response = await fetch(getApiUrl("/orders"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -76,7 +76,7 @@ export default function AddMenuItemPage() {
       }
 
       const { id } = JSON.parse(adminData)
-      const response = await fetch(getApiUrl("/menu/add"), {  // Update API endpoint
+      const response = await fetch(getApiUrl("/menu-items/add"), {  // Update API endpoint
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -107,7 +107,7 @@ export default function AddMenuItemPage() {
       <div 
         className="absolute inset-0 z-0"
         style={{
-          backgroundImage: "url('/restaurant-bg.jpg')",
+          backgroundImage: "url('/images/restaurant 1.jpg')",
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",

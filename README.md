@@ -46,8 +46,8 @@ A comprehensive restaurant management system with credit tracking capabilities, 
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/restaurant-credit-management.git
-cd restaurant-credit-management
+git clone https://github.com/AumS0910/Credit-Management-System.git
+cd miniProjectSem4-master
 ```
 
 ### 2. Backend Setup
@@ -199,7 +199,7 @@ The application automatically creates a default admin user on startup:
 ## Project Structure
 
 ```
-restaurant-credit-management/
+miniProjectSem4-master/
 ├── src/main/java/com/restaurant/creditmanagement/  # Backend source
 │   ├── controller/                                 # REST controllers
 │   ├── model/                                      # MongoDB documents
@@ -210,14 +210,19 @@ restaurant-credit-management/
 ├── src/main/resources/                             # Resources
 │   ├── templates/                                  # Thymeleaf templates
 │   ├── static/                                     # Static assets
+│   ├── db/migration/                               # Database migrations
 │   └── application.properties                      # App configuration
 ├── restaurant-dashboard/                           # Frontend application
 │   ├── src/
 │   │   ├── app/                                    # Next.js app router
 │   │   ├── components/                             # React components
-│   │   └── lib/                                    # Utilities
+│   │   ├── hooks/                                  # Custom hooks
+│   │   ├── lib/                                    # Utilities
+│   │   └── types/                                  # TypeScript definitions
 │   └── public/                                     # Static assets
-└── pom.xml                                         # Maven configuration
+├── .gitignore                                      # Git ignore rules
+├── pom.xml                                         # Maven configuration
+└── README.md                                        # This file
 ```
 
 ## Development
@@ -300,7 +305,7 @@ The frontend is configured for Vercel deployment.
 
 ## Live Demo
 
-- **Frontend**: [Deploy your frontend to Vercel/Netlify]
+- **Frontend**: https://credit-management-system.vercel.app
 - **Backend API**: https://credit-management-system-40i5.onrender.com
 
 ### Default Admin Credentials

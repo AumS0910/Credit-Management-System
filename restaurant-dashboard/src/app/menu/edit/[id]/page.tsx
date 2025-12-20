@@ -39,7 +39,7 @@ export default function EditMenuItemPage({ params }: { params: { id: string } })
         const { id: adminId } = JSON.parse(adminData)
 
         // Updated endpoint to match backend structure
-        const response = await fetch(getApiUrl(`/api/menu-items/get/${id}`), {
+        const response = await fetch(getApiUrl(`/menu-items/get/${id}`), {
           headers: {
             "Content-Type": "application/json",
             "Admin-ID": adminId.toString(),
@@ -74,7 +74,7 @@ export default function EditMenuItemPage({ params }: { params: { id: string } })
       }
       const { id: adminId } = JSON.parse(adminData)
 
-      const response = await fetch(getApiUrl(`/api/menu-items/${id}`), {
+      const response = await fetch(getApiUrl(`/menu-items/${id}`), {
         method: 'PUT',
         headers: {
           "Content-Type": "application/json",

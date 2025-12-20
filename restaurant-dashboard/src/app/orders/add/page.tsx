@@ -335,9 +335,9 @@ export default function AddOrderPage() {
                         required
                       >
                         <option value="">Select a customer</option>
-                        {customers.filter(customer => customer && customer.name).map((customer) => (
+                        {customers && customers.length > 0 && customers.filter(customer => customer && customer.name && customer.id).map((customer) => (
                           <option key={customer.id} value={customer.id}>
-                            {customer.name} - Balance: ${customer.creditBalance.toFixed(2)}
+                            {customer.name || 'Unknown Customer'} - Balance: ${customer.creditBalance ? customer.creditBalance.toFixed(2) : '0.00'}
                           </option>
                         ))}
                       </Select>
@@ -408,7 +408,7 @@ export default function AddOrderPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {menuItems.filter(item => item && item.name).map((item) => (
+                    {menuItems && menuItems.length > 0 && menuItems.filter(item => item && item.name && item.id).map((item) => (
                       <motion.div
                         key={item.id}
                         className="flex items-center gap-4 p-3 border rounded-lg hover:bg-gray-50"
@@ -417,13 +417,13 @@ export default function AddOrderPage() {
                       >
                         <img
                           src={item.imageUrl || '/placeholder-food.jpg'}
-                          alt={item.name}
+                          alt={item.name || 'Menu Item'}
                           className="w-16 h-16 object-cover rounded-md"
                         />
                         <div className="flex-1">
-                          <h3 className="font-medium">{item.name}</h3>
+                          <h3 className="font-medium">{item.name || 'Unknown Item'}</h3>
                           <p className="text-sm text-muted-foreground">
-                            ${item.price.toFixed(2)}
+                            ${item.price ? item.price.toFixed(2) : '0.00'}
                           </p>
                         </div>
                         <div className="flex items-center gap-2">

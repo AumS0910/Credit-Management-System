@@ -49,7 +49,7 @@ export default function MenuListPage() {
       if (response.ok) {
         const data = await response.json()
         const itemsWithImages = await Promise.all(data.map(async (item) => {
-          const imageResponse = await fetch(getApiUrl(`/pexels/food-image?name=${encodeURIComponent(item.name)}`))
+          const imageResponse = await fetch(getApiUrl(`/menu-items/pexels/food-image?name=${encodeURIComponent(item.name)}`))
           if (imageResponse.ok) {
             const imageData = await imageResponse.json()
             return { ...item, imageUrl: imageData.url }

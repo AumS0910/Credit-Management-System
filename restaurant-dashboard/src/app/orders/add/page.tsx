@@ -13,14 +13,14 @@ import { RiShoppingBag3Line, RiUserLine, RiMoneyDollarCircleLine, RiAddLine, RiS
 import { getApiUrl } from "@/lib/api"
 
 interface Customer {
-  id: number;
+  id: string;
   name: string;
   creditBalance: number;
 }
 
 // Update the MenuItem interface to include imageUrl
 interface MenuItem {
-  id: number;
+  id: string;
   name: string;
   price: number;
   imageUrl: string;  // Add this line
@@ -28,7 +28,7 @@ interface MenuItem {
 }
 
 interface OrderItem {
-  menuItemId: number;
+  menuItemId: string;
   quantity: number;
   price: number;
   name: string;
@@ -162,7 +162,7 @@ export default function AddOrderPage() {
         }
 
         menuItemsData = await Promise.all(menuItemsData.map(async (item: MenuItem) => {
-          const imageResponse = await fetch(getApiUrl(`/pexels/food-image?name=${encodeURIComponent(item.name)}`))
+          const imageResponse = await fetch(getApiUrl(`/menu-items/pexels/food-image?name=${encodeURIComponent(item.name)}`))
           if (imageResponse.ok) {
             const imageData = await imageResponse.json()
             return { ...item, imageUrl: imageData.url }
@@ -201,7 +201,7 @@ export default function AddOrderPage() {
     })
   }
 
-  const updateQuantity = (menuItemId: number, change: number) => {
+  const updateQuantity = (menuItemId: string, change: number) => {
     setSelectedItems(prev => prev.map(item => {
       if (item.menuItemId === menuItemId) {
         const newQuantity = item.quantity + change
@@ -239,7 +239,7 @@ export default function AddOrderPage() {
       // Remove the credit balance validation check
       // Only check if customer exists
       if (formData.paymentMethod === "CREDIT") {
-        const customer = customers.find(c => c.id === parseInt(formData.customerId))
+        const customer = customers.find(c => c.id === formData.customerId)
         if (!customer) {
           setError("Customer not found")
           return
@@ -253,7 +253,7 @@ export default function AddOrderPage() {
           "Admin-ID": id.toString()
         },
         body: JSON.stringify({
-          customerId: parseInt(formData.customerId),
+          customerId: formData.customerId,
           menuItemIds: selectedItems.map(item => item.menuItemId),
           quantities: selectedItems.map(item => item.quantity),
           paymentMethod: formData.paymentMethod,
@@ -337,10 +337,10 @@ export default function AddOrderPage() {
                           </option>
                         ))}
                       </Select>
-                      {formData.customerId && customers.find(c => c.id === parseInt(formData.customerId)) && (
+                      {formData.customerId && customers.find(c => c.id === formData.customerId) && (
                         <div className="text-sm text-muted-foreground">
-                          <p>Credit Balance: ${customers.find(c => c.id === parseInt(formData.customerId))?.creditBalance.toFixed(2)}</p>
-                          <p>Status: {customers.find(c => c.id === parseInt(formData.customerId))?.active ? 'Active' : 'Inactive'}</p>
+                          <p>Credit Balance: ${customers.find(c => c.id === formData.customerId)?.creditBalance.toFixed(2)}</p>
+                          <p>Status: {customers.find(c => c.id === formData.customerId)?.active ? 'Active' : 'Inactive'}</p>
                         </div>
                       )}
                     </div>

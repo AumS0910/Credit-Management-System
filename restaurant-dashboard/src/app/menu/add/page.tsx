@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { RiRestaurantLine, RiPriceTag3Line, RiTimeLine, RiImageAddLine } from "react-icons/ri"
+import { getApiUrl } from "@/lib/api"
 
 interface MenuItem {
   name: string;
@@ -39,7 +40,7 @@ export default function AddMenuItemPage() {
     prepTime: 0,
     isSpecial: false,
     available: true,
-    rating: 5
+    rating: "5"
   })
 
   const categories = [
@@ -75,7 +76,7 @@ export default function AddMenuItemPage() {
       }
 
       const { id } = JSON.parse(adminData)
-      const response = await fetch("http://localhost:8080/api/menu-items/add", {  // Update API endpoint
+      const response = await fetch(getApiUrl("/menu/add"), {  // Update API endpoint
         method: "POST",
         headers: {
           "Content-Type": "application/json",

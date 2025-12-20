@@ -66,7 +66,7 @@ export default function EditCustomerPage() {
       }
 
       const { id: adminId } = JSON.parse(adminData)
-      const response = await fetch(`http://localhost:8080/customers/${params.id}/update`, {
+      const response = await fetch(getApiUrl(`/customers/${params.id}/update`), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

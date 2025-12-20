@@ -12,6 +12,6 @@ export const getApiUrl = (endpoint: string) => {
   // Ensure endpoint starts with /
   const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`
   const url = `${API_BASE_URL}/api${normalizedEndpoint}`
-  console.log('🔗 API Call URL:', url)
+  console.log('🔗 API Call URL:', url, '(API_BASE_URL:', API_BASE_URL, ', endpoint:', endpoint, ')')
   return url
 }

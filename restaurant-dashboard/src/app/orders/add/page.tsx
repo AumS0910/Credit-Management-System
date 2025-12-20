@@ -161,11 +161,15 @@ export default function AddOrderPage() {
           menuItemsData = [menuItemsData]
         }
 
-        menuItemsData = await Promise.all(menuItemsData.map(async (item: MenuItem) => {
-          const imageResponse = await fetch(getApiUrl(`/menu-items/pexels/food-image?name=${encodeURIComponent(item.name)}`))
-          if (imageResponse.ok) {
-            const imageData = await imageResponse.json()
-            return { ...item, imageUrl: imageData.url }
+        menuItemsData = await Promise.all(menuItemsData.filter(item => item && item.name).map(async (item: MenuItem) => {
+          try {
+            const imageResponse = await fetch(getApiUrl(`/menu-items/pexels/food-image?name=${encodeURIComponent(item.name)}`))
+            if (imageResponse.ok) {
+              const imageData = await imageResponse.json()
+              return { ...item, imageUrl: imageData.url }
+            }
+          } catch (error) {
+            console.error('Failed to fetch image for', item.name, error)
           }
           return item
         }))
@@ -331,7 +335,7 @@ export default function AddOrderPage() {
                         required
                       >
                         <option value="">Select a customer</option>
-                        {customers.map((customer) => (
+                        {customers.filter(customer => customer && customer.name).map((customer) => (
                           <option key={customer.id} value={customer.id}>
                             {customer.name} - Balance: ${customer.creditBalance.toFixed(2)}
                           </option>
@@ -404,7 +408,7 @@ export default function AddOrderPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {menuItems.map((item) => (
+                    {menuItems.filter(item => item && item.name).map((item) => (
                       <motion.div
                         key={item.id}
                         className="flex items-center gap-4 p-3 border rounded-lg hover:bg-gray-50"

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import { Sidebar } from "@/components/sidebar"
+import { getApiUrl } from "@/lib/api"
 
 interface AdminSettings {
   id: number;
@@ -28,7 +29,7 @@ export default function SettingsPage() {
         if (!adminData) return;
         
         const { id } = JSON.parse(adminData);
-        const response = await fetch(`http://localhost:8080/api/admin/${id}`, {
+        const response = await fetch(getApiUrl(`/admin/${id}`), {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
@@ -53,7 +54,7 @@ export default function SettingsPage() {
     e.preventDefault();
     
     try {
-      const response = await fetch(`http://localhost:8080/api/admin/${settings?.id}`, {
+      const response = await fetch(getApiUrl(`/admin/${settings?.id}`), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

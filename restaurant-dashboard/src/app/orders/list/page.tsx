@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { RiShoppingBag3Line, RiAddLine, RiEyeLine, RiEditLine, RiDeleteBinLine } from "react-icons/ri"
 import { motion } from "framer-motion" // Add this import
+import { getApiUrl } from "@/lib/api"
 
 interface Order {
   id: number;
@@ -38,7 +39,7 @@ export default function OrderListPage() {
       }
       const { id } = JSON.parse(adminData)
 
-      const response = await fetch(`http://localhost:8080/api/orders`, {
+      const response = await fetch(getApiUrl(`/orders`), {
         headers: {
           "Content-Type": "application/json",
           "Admin-ID": id.toString()
@@ -68,7 +69,7 @@ export default function OrderListPage() {
       const { id } = JSON.parse(adminData)
 
       // First fetch the order details
-      const response = await fetch(`http://localhost:8080/api/orders/${orderId}`, {
+      const response = await fetch(getApiUrl(`/orders/${orderId}`), {
         headers: {
           "Content-Type": "application/json",
           "Admin-ID": id.toString()
@@ -101,7 +102,7 @@ export default function OrderListPage() {
       }
       const { id } = JSON.parse(adminData)
 
-      const response = await fetch(`http://localhost:8080/api/orders/${orderId}`, {
+      const response = await fetch(getApiUrl(`/orders/${orderId}`), {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",

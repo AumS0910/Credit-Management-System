@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Select } from "@/components/ui/select"
 import { Sidebar } from "@/components/sidebar"
+import { getApiUrl } from "@/lib/api"
 
 interface MenuItem {
   id: number
@@ -38,7 +39,7 @@ export default function EditMenuItemPage({ params }: { params: { id: string } })
         const { id: adminId } = JSON.parse(adminData)
 
         // Updated endpoint to match backend structure
-        const response = await fetch(`http://localhost:8080/api/menu-items/get/${id}`, {
+        const response = await fetch(getApiUrl(`/api/menu-items/get/${id}`), {
           headers: {
             "Content-Type": "application/json",
             "Admin-ID": adminId.toString(),
@@ -73,7 +74,7 @@ export default function EditMenuItemPage({ params }: { params: { id: string } })
       }
       const { id: adminId } = JSON.parse(adminData)
 
-      const response = await fetch(`http://localhost:8080/api/menu-items/${id}`, {
+      const response = await fetch(getApiUrl(`/api/menu-items/${id}`), {
         method: 'PUT',
         headers: {
           "Content-Type": "application/json",

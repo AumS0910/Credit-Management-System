@@ -3,21 +3,22 @@
 import { useState, useEffect, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
-import { 
-  RiArrowLeftLine, 
-  RiArrowRightLine, 
-  RiPlayCircleLine, 
-  RiEditLine, 
+import {
+  RiArrowLeftLine,
+  RiArrowRightLine,
+  RiPlayCircleLine,
+  RiEditLine,
   RiDeleteBinLine,
-  RiSearchLine, 
-  RiAddLine, 
-  RiShoppingBag3Line 
+  RiSearchLine,
+  RiAddLine,
+  RiShoppingBag3Line
 } from "react-icons/ri"
 import { Button } from "@/components/ui/button"
 import useMeasure from 'react-use-measure'
 import { Input } from "@/components/ui/input"
 import { useSpring, animated } from '@react-spring/web'
 import { Sidebar } from "@/components/sidebar" // Import Sidebar component
+import { getApiUrl } from "@/lib/api"
 
 export default function MenuListPage() {
   const router = useRouter()
@@ -38,7 +39,7 @@ export default function MenuListPage() {
       }
 
       const { id } = JSON.parse(adminData)
-      const response = await fetch(`http://localhost:8080/api/menu-items`, {
+      const response = await fetch(getApiUrl(`/menu-items`), {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Admin-ID': id.toString()
@@ -48,7 +49,7 @@ export default function MenuListPage() {
       if (response.ok) {
         const data = await response.json()
         const itemsWithImages = await Promise.all(data.map(async (item) => {
-          const imageResponse = await fetch(`http://localhost:8080/api/pexels/food-image?name=${encodeURIComponent(item.name)}`)
+          const imageResponse = await fetch(getApiUrl(`/pexels/food-image?name=${encodeURIComponent(item.name)}`))
           if (imageResponse.ok) {
             const imageData = await imageResponse.json()
             return { ...item, imageUrl: imageData.url }
@@ -71,7 +72,7 @@ export default function MenuListPage() {
     }
 
     try {
-      const response = await fetch(`http://localhost:8080/api/menu-items/search?query=${searchQuery}`)
+      const response = await fetch(getApiUrl(`/menu-items/search?query=${searchQuery}`))
       if (response.ok) {
         const data = await response.json()
         setMenuItems(data)
@@ -92,7 +93,7 @@ export default function MenuListPage() {
       }
       const { id: adminId } = JSON.parse(adminData)
 
-      const response = await fetch(`http://localhost:8080/api/menu-items/${id}`, {
+      const response = await fetch(getApiUrl(`/menu-items/${id}`), {
         method: 'DELETE',
         headers: {
           "Content-Type": "application/json",

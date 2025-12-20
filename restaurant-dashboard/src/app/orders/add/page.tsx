@@ -144,7 +144,13 @@ export default function AddOrderPage() {
             "Admin-ID": id.toString()
           }
         }),
-        fetch(getApiUrl(`/menu-items/${id}`))
+        fetch(getApiUrl('/menu-items'), {
+          headers: {
+            "Content-Type": "application/json",
+            "Admin-ID": id.toString(),
+            "Authorization": `Bearer ${localStorage.getItem('token')}`
+          }
+        })
       ])
 
       if (customersRes.ok && menuItemsRes.ok) {

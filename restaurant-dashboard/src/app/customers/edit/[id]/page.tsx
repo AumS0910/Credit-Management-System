@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { RiUserLine } from "react-icons/ri"
+import { getApiUrl } from "@/lib/api"
 
 interface Customer {
   id: number;
@@ -37,7 +38,7 @@ export default function EditCustomerPage() {
       }
 
       const { id: adminId } = JSON.parse(adminData)
-      const response = await fetch(`http://localhost:8080/customers/${params.id}`, {
+      const response = await fetch(getApiUrl(`customers/${params.id}`), {
         headers: {
           'Admin-ID': adminId.toString()
         }

@@ -136,7 +136,7 @@ public class MenuController {
     }
 
     // Get specific menu item
-    @GetMapping("/get/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<?> getMenuItem(@PathVariable String id,
                                        @RequestHeader("Admin-ID") String adminId) {
         try {

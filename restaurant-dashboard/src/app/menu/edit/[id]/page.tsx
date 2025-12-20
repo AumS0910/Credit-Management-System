@@ -39,7 +39,7 @@ export default function EditMenuItemPage({ params }: { params: { id: string } })
         const { id: adminId } = JSON.parse(adminData)
 
         // Updated endpoint to match backend structure
-        const response = await fetch(getApiUrl(`/menu-items/get/${id}`), {
+        const response = await fetch(getApiUrl(`/menu-items/${id}`), {
           headers: {
             "Content-Type": "application/json",
             "Admin-ID": adminId.toString(),

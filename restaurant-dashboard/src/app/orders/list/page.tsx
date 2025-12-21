@@ -45,10 +45,30 @@ export default function OrderListPage() {
   const connectWebSocket = () => {
     // Use the API base URL for WebSocket connection
     const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'
-    const wsUrl = `${apiBaseUrl}/ws`
 
-    const socket = new SockJS(wsUrl)
-    stompClientRef.current = Stomp.over(socket)
+    // For production (HTTPS), use secure WebSocket
+    // For development (HTTP), use regular SockJS
+    const isProduction = typeof window !== 'undefined' && window.location.protocol === 'https:'
+
+    let socket
+    if (isProduction) {
+      // In production, try direct WebSocket first (better for HTTPS)
+      try {
+        const wsUrl = apiBaseUrl.replace(/^https:/, 'wss:') + '/ws'
+        console.log('Connecting to secure WebSocket:', wsUrl)
+        socket = new WebSocket(wsUrl)
+        stompClientRef.current = Stomp.over(socket)
+      } catch (error) {
+        console.log('Direct WebSocket failed in production, this should not happen')
+        return
+      }
+    } else {
+      // In development, use SockJS (works with HTTP)
+      const wsUrl = `${apiBaseUrl}/ws`
+      console.log('Connecting to SockJS:', wsUrl)
+      socket = new SockJS(wsUrl)
+      stompClientRef.current = Stomp.over(socket)
+    }
 
     stompClientRef.current.connect({}, (frame: any) => {
       console.log('Connected to WebSocket:', frame)

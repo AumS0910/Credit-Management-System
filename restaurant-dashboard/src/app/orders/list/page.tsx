@@ -42,7 +42,11 @@ export default function OrderListPage() {
   }, [])
 
   const connectWebSocket = () => {
-    const socket = new SockJS('http://localhost:8080/ws')
+    // Use the API base URL for WebSocket connection
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'
+    const wsUrl = `${apiBaseUrl}/ws`
+
+    const socket = new SockJS(wsUrl)
     stompClientRef.current = Stomp.over(socket)
 
     stompClientRef.current.connect({}, (frame: any) => {

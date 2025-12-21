@@ -1,7 +1,7 @@
 package com.restaurant.creditmanagement.service;
 
-import com.restaurant.creditmanagement.controller.WebSocketController;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.stereotype.Service;
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 public class RedisMessageListener implements MessageListener {
 
     @Autowired
-    private WebSocketController webSocketController;
+    private ApplicationEventPublisher eventPublisher;
 
     @Override
     public void onMessage(Message message, byte[] pattern) {
@@ -20,14 +20,16 @@ public class RedisMessageListener implements MessageListener {
         System.out.println("Received message from Redis channel '" + channel + "': " + body);
 
         try {
+            // Publish a Spring application event that can be handled by other components
+            // This breaks the circular dependency by using event-driven communication
+            RedisMessageEvent event = new RedisMessageEvent(this, channel, body);
+            eventPublisher.publishEvent(event);
+
             // Here you could add logic to:
             // 1. Send email notifications
             // 2. Send SMS notifications
             // 3. Trigger other microservices
             // 4. Log events for analytics
-
-            // For now, we'll just broadcast to WebSocket clients
-            // In a real event-driven system, this would trigger various services
 
         } catch (Exception e) {
             System.err.println("Error processing Redis message: " + e.getMessage());

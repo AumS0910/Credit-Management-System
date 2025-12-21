@@ -1,8 +1,11 @@
 package com.restaurant.creditmanagement.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.restaurant.creditmanagement.model.Order;
+import com.restaurant.creditmanagement.service.RedisMessageEvent;
 import com.restaurant.creditmanagement.service.RedisMessagePublisher;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -16,6 +19,9 @@ public class WebSocketController {
 
     @Autowired
     private RedisMessagePublisher redisPublisher;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     // Method to send order updates to all connected clients
     public void sendOrderUpdate(Order order, String action) {
@@ -48,6 +54,26 @@ public class WebSocketController {
             redisPublisher.publish(notification);
         } catch (Exception e) {
             System.err.println("Failed to publish notification to Redis: " + e.getMessage());
+        }
+    }
+
+    // Event listener for Redis messages (breaks circular dependency)
+    @EventListener
+    public void handleRedisMessage(RedisMessageEvent event) {
+        try {
+            // Parse the message and broadcast to WebSocket clients
+            // This allows the Redis listener to communicate with WebSocket without direct dependency
+            if ("orders".equals(event.getChannel())) {
+                // Try to parse as OrderUpdateMessage
+                OrderUpdateMessage orderUpdate = objectMapper.readValue(event.getMessage(), OrderUpdateMessage.class);
+                messagingTemplate.convertAndSend("/topic/orders", orderUpdate);
+            } else if ("notifications".equals(event.getChannel())) {
+                // Try to parse as NotificationMessage
+                NotificationMessage notification = objectMapper.readValue(event.getMessage(), NotificationMessage.class);
+                messagingTemplate.convertAndSend("/topic/notifications", notification);
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to process Redis message event: " + e.getMessage());
         }
     }
 

@@ -53,13 +53,47 @@ public class DashboardController {
                 })
                 .collect(Collectors.toList());
 
+            // Get recent orders with customer information
+            List<Order> recentOrders = orderService.getRecentOrders(adminId);
+            List<Map<String, Object>> recentOrdersWithCustomer = recentOrders.stream()
+                .map(order -> {
+                    Map<String, Object> orderMap = new HashMap<>();
+                    orderMap.put("id", order.getId());
+                    orderMap.put("orderDate", order.getOrderDate().toString());
+                    orderMap.put("totalAmount", order.getTotalAmount());
+                    orderMap.put("status", order.getStatus());
+                    orderMap.put("paymentMethod", order.getPaymentMethod());
+
+                    // Add customer information
+                    try {
+                        Customer customer = customerService.getCustomerById(order.getCustomerId(), adminId)
+                                .orElse(null);
+                        if (customer != null) {
+                            Map<String, Object> customerInfo = new HashMap<>();
+                            customerInfo.put("name", customer.getName());
+                            orderMap.put("customer", customerInfo);
+                        } else {
+                            Map<String, Object> customerInfo = new HashMap<>();
+                            customerInfo.put("name", "Unknown Customer");
+                            orderMap.put("customer", customerInfo);
+                        }
+                    } catch (Exception e) {
+                        Map<String, Object> customerInfo = new HashMap<>();
+                        customerInfo.put("name", "Unknown Customer");
+                        orderMap.put("customer", customerInfo);
+                    }
+
+                    return orderMap;
+                })
+                .collect(Collectors.toList());
+
             // Create response object
             Map<String, Object> response = new HashMap<>();
             response.put("revenue", totalRevenue);
             response.put("orders", orderService.getTotalOrderCount(adminId));
             response.put("customers", customers.size());
             response.put("creditBalance", totalCreditBalance);
-            response.put("recentOrders", orderService.getRecentOrders(adminId));
+            response.put("recentOrders", recentOrdersWithCustomer);
             response.put("recentCustomers", recentCustomers);
 
             return ResponseEntity.ok(response);

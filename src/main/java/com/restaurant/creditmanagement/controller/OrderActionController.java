@@ -18,9 +18,6 @@ public class OrderActionController {
     @Autowired
     private OrderRepository orderRepository;
 
-    @Autowired
-    private WebSocketController webSocketController;
-
     @PostMapping("/{id}/start")
     public String startOrder(@PathVariable String id,
                             RedirectAttributes redirectAttributes,
@@ -40,16 +37,6 @@ public class OrderActionController {
             String previousStatus = order.getStatus();
             order.setStatus("APPROVED");
             Order savedOrder = orderRepository.save(order);
-
-            // Send real-time order update via WebSocket
-            try {
-                webSocketController.sendOrderUpdate(savedOrder, "STATUS_CHANGED");
-                webSocketController.sendNotification("success",
-                    "Order #" + savedOrder.getId() + " has been approved and is being prepared", savedOrder.getId());
-            } catch (Exception e) {
-                // Log error but don't fail the operation
-                System.err.println("Failed to send WebSocket update: " + e.getMessage());
-            }
 
             redirectAttributes.addFlashAttribute("success", "Order started successfully!");
         } catch (Exception e) {
@@ -79,16 +66,6 @@ public class OrderActionController {
             order.setStatus("COMPLETED");
             Order savedOrder = orderRepository.save(order);
 
-            // Send real-time order update via WebSocket
-            try {
-                webSocketController.sendOrderUpdate(savedOrder, "STATUS_CHANGED");
-                webSocketController.sendNotification("success",
-                    "Order #" + savedOrder.getId() + " has been completed", savedOrder.getId());
-            } catch (Exception e) {
-                // Log error but don't fail the operation
-                System.err.println("Failed to send WebSocket update: " + e.getMessage());
-            }
-
             redirectAttributes.addFlashAttribute("success", "Order completed successfully!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Failed to complete order: " + e.getMessage());
@@ -116,16 +93,6 @@ public class OrderActionController {
             String previousStatus = order.getStatus();
             order.setStatus("CANCELLED");
             Order savedOrder = orderRepository.save(order);
-
-            // Send real-time order update via WebSocket
-            try {
-                webSocketController.sendOrderUpdate(savedOrder, "CANCELLED");
-                webSocketController.sendNotification("error",
-                    "Order #" + savedOrder.getId() + " has been cancelled", savedOrder.getId());
-            } catch (Exception e) {
-                // Log error but don't fail the operation
-                System.err.println("Failed to send WebSocket update: " + e.getMessage());
-            }
 
             redirectAttributes.addFlashAttribute("success", "Order cancelled successfully!");
         } catch (Exception e) {

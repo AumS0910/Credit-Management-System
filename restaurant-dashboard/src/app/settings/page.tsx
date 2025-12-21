@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { toast } from "sonner"
 import { Sidebar } from "@/components/sidebar"
 import { getApiUrl } from "@/lib/api"
 
@@ -41,7 +40,6 @@ export default function SettingsPage() {
         }
       } catch (error) {
         console.error('Failed to fetch settings:', error);
-        toast.error("Failed to load settings");
       } finally {
         setLoading(false);
       }
@@ -64,13 +62,12 @@ export default function SettingsPage() {
       });
 
       if (response.ok) {
-        toast.success("Settings updated successfully");
+        console.log("Settings updated successfully");
       } else {
-        toast.error("Failed to update settings");
+        console.error("Failed to update settings");
       }
     } catch (error) {
       console.error('Error updating settings:', error);
-      toast.error("Failed to update settings");
     }
   };
 

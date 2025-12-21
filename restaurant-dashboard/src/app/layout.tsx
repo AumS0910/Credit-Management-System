@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
-import { Toaster } from "sonner";
 import { Montserrat } from 'next/font/google';
 
 const montserrat = Montserrat({
@@ -32,7 +31,6 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
-          <Toaster position="top-right" richColors closeButton />
         </ThemeProvider>
       </body>
     </html>

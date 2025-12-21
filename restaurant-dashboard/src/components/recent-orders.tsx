@@ -6,18 +6,14 @@ import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
 interface Order {
-  id: number | string;
+  id: string;
   customer?: {
     name: string;
-  } | string;
+  };
   orderDate?: string;
-  time?: string;
   totalAmount?: number;
-  total?: number;
   status: string;
   paymentMethod?: string;
-  items?: string[];
-  table?: string;
 }
 
 interface RecentOrdersProps {
@@ -59,50 +55,41 @@ export function RecentOrders({ orders }: RecentOrdersProps) {
             No recent orders
           </div>
         ) : (
-          orders.map((order, index) => (
-            <motion.div
-              key={order.id}
-              className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              whileHover={{ scale: 1.01 }}
-            >
-              <div>
-                <h3 className="font-medium">Order #{order.id}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {typeof order.customer === 'string' 
-                    ? order.customer 
-                    : order.customer?.name || 'Unknown Customer'} • 
-                  {order.orderDate ? formatDate(order.orderDate) : 
-                   order.time ? new Date(order.time).toLocaleTimeString([], { 
-                     hour: '2-digit', 
-                     minute: '2-digit' 
-                   }) : ''}
-                </p>
-                <div className="flex gap-2 mt-1">
-                  <Badge variant="outline" className={getStatusColor(order.status)}>
-                    {order.status}
-                  </Badge>
-                  {order.paymentMethod && (
-                    <Badge variant="outline" className="bg-blue-100 text-blue-800">
-                      {order.paymentMethod}
-                    </Badge>
-                  )}
-                </div>
-                {order.items && (
-                  <p className="text-sm text-muted-foreground line-clamp-1 mt-2">
-                    {order.items.join(", ")}
+          orders
+            .filter(order => order && typeof order === 'object' && order.id && order.status)
+            .map((order, index) => (
+              <motion.div
+                key={order.id}
+                className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                whileHover={{ scale: 1.01 }}
+              >
+                <div>
+                  <h3 className="font-medium">Order #{order.id}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {order.customer?.name || 'Unknown Customer'} •
+                    {order.orderDate ? formatDate(order.orderDate) : 'No date'}
                   </p>
-                )}
-              </div>
-              <div className="text-right">
-                <p className="font-medium">
-                  ${((order.totalAmount || order.total || 0)).toFixed(2)}
-                </p>
-              </div>
-            </motion.div>
-          ))
+                  <div className="flex gap-2 mt-1">
+                    <Badge variant="outline" className={getStatusColor(order.status || 'pending')}>
+                      {order.status || 'Pending'}
+                    </Badge>
+                    {order.paymentMethod && (
+                      <Badge variant="outline" className="bg-blue-100 text-blue-800">
+                        {order.paymentMethod}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="font-medium">
+                    ${order.totalAmount ? order.totalAmount.toFixed(2) : '0.00'}
+                  </p>
+                </div>
+              </motion.div>
+            ))
         )}
       </div>
     </ScrollArea>

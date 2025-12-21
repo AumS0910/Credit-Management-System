@@ -31,7 +31,13 @@ export function RecentCustomers({ customers }: RecentCustomersProps) {
                 <div>
                   <p className="font-medium">{customer.name || 'Unknown Customer'}</p>
                   <p className="text-sm text-muted-foreground">
-                    Created: {customer.createdAt ? new Date(customer.createdAt).toLocaleDateString() : 'N/A'}
+                    Created: {customer.createdAt ? (() => {
+                      try {
+                        return new Date(customer.createdAt).toLocaleDateString();
+                      } catch (e) {
+                        return customer.createdAt; // Show raw date if parsing fails
+                      }
+                    })() : new Date().toLocaleDateString()}
                   </p>
                 </div>
               </div>

@@ -48,7 +48,9 @@ public class DashboardController {
                     customerMap.put("id", customer.getId());
                     customerMap.put("name", customer.getName());
                     customerMap.put("creditBalance", customer.getCreditBalance());
-                    customerMap.put("createdAt", customer.getCreatedAt());
+                    // Format createdAt as a proper date string
+                    customerMap.put("createdAt", customer.getCreatedAt() != null ?
+                        customer.getCreatedAt().toString() : LocalDateTime.now().toString());
                     return customerMap;
                 })
                 .collect(Collectors.toList());

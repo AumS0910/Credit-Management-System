@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Sidebar } from "@/components/sidebar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -8,6 +8,9 @@ import { Button } from "@/components/ui/button"
 import { RiShoppingBag3Line, RiAddLine, RiEyeLine, RiEditLine, RiDeleteBinLine } from "react-icons/ri"
 import { motion } from "framer-motion" // Add this import
 import { getApiUrl } from "@/lib/api"
+import SockJS from 'sockjs-client'
+import { Stomp } from '@stomp/stompjs'
+import { toast } from "sonner"
 
 interface Order {
   id: string;
@@ -26,10 +29,58 @@ export default function OrderListPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
+  const stompClientRef = useRef<any>(null)
 
   useEffect(() => {
     fetchOrders()
+    connectWebSocket()
+    return () => {
+      if (stompClientRef.current) {
+        stompClientRef.current.deactivate()
+      }
+    }
   }, [])
+
+  const connectWebSocket = () => {
+    const socket = new SockJS('http://localhost:8080/ws')
+    stompClientRef.current = Stomp.over(socket)
+
+    stompClientRef.current.connect({}, (frame: any) => {
+      console.log('Connected: ' + frame)
+
+      // Subscribe to order updates
+      stompClientRef.current.subscribe('/topic/orders', (message: any) => {
+        const orderUpdate = JSON.parse(message.body)
+        handleOrderUpdate(orderUpdate)
+      })
+
+      // Subscribe to notifications
+      stompClientRef.current.subscribe('/topic/notifications', (message: any) => {
+        const notification = JSON.parse(message.body)
+        handleNotification(notification)
+      })
+    }, (error: any) => {
+      console.error('WebSocket connection error:', error)
+    })
+  }
+
+  const handleOrderUpdate = (orderUpdate: any) => {
+    console.log('Order update received:', orderUpdate)
+    // Refresh orders when an update is received
+    fetchOrders()
+  }
+
+  const handleNotification = (notification: any) => {
+    console.log('Notification received:', notification)
+
+    if (notification.type === 'success') {
+      toast.success(notification.message)
+    } else if (notification.type === 'error') {
+      toast.error(notification.message)
+    } else {
+      toast.info(notification.message)
+    }
+  }
 
   const fetchOrders = async () => {
     try {

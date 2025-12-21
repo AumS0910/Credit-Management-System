@@ -2,8 +2,6 @@ package com.restaurant.creditmanagement.controller;
 
 import com.restaurant.creditmanagement.model.Order;
 import com.restaurant.creditmanagement.repository.OrderRepository;
-import com.restaurant.creditmanagement.service.KafkaProducerService;
-import com.restaurant.creditmanagement.events.OrderEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,7 +19,7 @@ public class OrderActionController {
     private OrderRepository orderRepository;
 
     @Autowired
-    private KafkaProducerService kafkaProducerService;
+    private WebSocketController webSocketController;
 
     @PostMapping("/{id}/start")
     public String startOrder(@PathVariable String id,
@@ -43,19 +41,14 @@ public class OrderActionController {
             order.setStatus("APPROVED");
             Order savedOrder = orderRepository.save(order);
 
-            // Publish order status changed event to Kafka
+            // Send real-time order update via WebSocket
             try {
-                String adminId = session.getAttribute("adminId").toString();
-                OrderEvent orderEvent = new OrderEvent("ORDER_STATUS_CHANGED", savedOrder.getId(), adminId);
-                orderEvent.setPreviousStatus(previousStatus);
-                orderEvent.setNewStatus("APPROVED");
-                orderEvent.setCustomerId(savedOrder.getCustomerId());
-                orderEvent.setTotalAmount(savedOrder.getTotalAmount());
-                orderEvent.setPaymentMethod(savedOrder.getPaymentMethod());
-                kafkaProducerService.sendOrderStatusChangedEvent(orderEvent);
+                webSocketController.sendOrderUpdate(savedOrder, "STATUS_CHANGED");
+                webSocketController.sendNotification("success",
+                    "Order #" + savedOrder.getId() + " has been approved and is being prepared", savedOrder.getId());
             } catch (Exception e) {
                 // Log error but don't fail the operation
-                System.err.println("Failed to publish order status changed event: " + e.getMessage());
+                System.err.println("Failed to send WebSocket update: " + e.getMessage());
             }
 
             redirectAttributes.addFlashAttribute("success", "Order started successfully!");
@@ -86,19 +79,14 @@ public class OrderActionController {
             order.setStatus("COMPLETED");
             Order savedOrder = orderRepository.save(order);
 
-            // Publish order status changed event to Kafka
+            // Send real-time order update via WebSocket
             try {
-                String adminId = session.getAttribute("adminId").toString();
-                OrderEvent orderEvent = new OrderEvent("ORDER_STATUS_CHANGED", savedOrder.getId(), adminId);
-                orderEvent.setPreviousStatus(previousStatus);
-                orderEvent.setNewStatus("COMPLETED");
-                orderEvent.setCustomerId(savedOrder.getCustomerId());
-                orderEvent.setTotalAmount(savedOrder.getTotalAmount());
-                orderEvent.setPaymentMethod(savedOrder.getPaymentMethod());
-                kafkaProducerService.sendOrderStatusChangedEvent(orderEvent);
+                webSocketController.sendOrderUpdate(savedOrder, "STATUS_CHANGED");
+                webSocketController.sendNotification("success",
+                    "Order #" + savedOrder.getId() + " has been completed", savedOrder.getId());
             } catch (Exception e) {
                 // Log error but don't fail the operation
-                System.err.println("Failed to publish order status changed event: " + e.getMessage());
+                System.err.println("Failed to send WebSocket update: " + e.getMessage());
             }
 
             redirectAttributes.addFlashAttribute("success", "Order completed successfully!");
@@ -129,19 +117,14 @@ public class OrderActionController {
             order.setStatus("CANCELLED");
             Order savedOrder = orderRepository.save(order);
 
-            // Publish order cancelled event to Kafka
+            // Send real-time order update via WebSocket
             try {
-                String adminId = session.getAttribute("adminId").toString();
-                OrderEvent orderEvent = new OrderEvent("ORDER_CANCELLED", savedOrder.getId(), adminId);
-                orderEvent.setPreviousStatus(previousStatus);
-                orderEvent.setNewStatus("CANCELLED");
-                orderEvent.setCustomerId(savedOrder.getCustomerId());
-                orderEvent.setTotalAmount(savedOrder.getTotalAmount());
-                orderEvent.setPaymentMethod(savedOrder.getPaymentMethod());
-                kafkaProducerService.sendOrderCancelledEvent(orderEvent);
+                webSocketController.sendOrderUpdate(savedOrder, "CANCELLED");
+                webSocketController.sendNotification("error",
+                    "Order #" + savedOrder.getId() + " has been cancelled", savedOrder.getId());
             } catch (Exception e) {
                 // Log error but don't fail the operation
-                System.err.println("Failed to publish order cancelled event: " + e.getMessage());
+                System.err.println("Failed to send WebSocket update: " + e.getMessage());
             }
 
             redirectAttributes.addFlashAttribute("success", "Order cancelled successfully!");

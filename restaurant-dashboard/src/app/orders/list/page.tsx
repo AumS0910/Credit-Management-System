@@ -103,7 +103,7 @@ export default function OrderListPage() {
       }
       const { id } = JSON.parse(adminData)
 
-      const response = await fetch(getApiUrl(`/orders`), {
+      const response = await fetch(getApiUrl(`/orders/${orderId}`), {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",

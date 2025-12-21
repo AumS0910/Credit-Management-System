@@ -8,8 +8,6 @@ import { Button } from "@/components/ui/button"
 import { RiShoppingBag3Line, RiAddLine, RiEyeLine, RiEditLine, RiDeleteBinLine } from "react-icons/ri"
 import { motion } from "framer-motion" // Add this import
 import { getApiUrl } from "@/lib/api"
-import SockJS from 'sockjs-client'
-import { Stomp } from '@stomp/stompjs'
 import { toast } from "sonner"
 
 interface Order {
@@ -29,61 +27,82 @@ export default function OrderListPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
-  const stompClientRef = useRef<any>(null)
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
+  const previousOrdersRef = useRef<Order[]>([])
 
   useEffect(() => {
     fetchOrders()
-    connectWebSocket()
-    return () => {
-      if (stompClientRef.current) {
-        stompClientRef.current.deactivate()
-      }
-    }
+    const cleanup = startRealTimeUpdates()
+    return cleanup
   }, [])
 
-  const connectWebSocket = () => {
-    // Use the API base URL for WebSocket connection
-    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'
-    const wsUrl = `${apiBaseUrl}/ws`
+  // Real-time polling for order updates (more reliable than WebSocket for HTTPS)
+  const startRealTimeUpdates = () => {
+    // Poll for updates every 10 seconds
+    const interval = setInterval(async () => {
+      try {
+        const adminData = localStorage.getItem('adminData')
+        if (!adminData) return
 
-    const socket = new SockJS(wsUrl)
-    stompClientRef.current = Stomp.over(socket)
+        const { id } = JSON.parse(adminData)
+        const response = await fetch(getApiUrl(`/orders`), {
+          headers: {
+            "Content-Type": "application/json",
+            "Admin-ID": id.toString()
+          }
+        })
 
-    stompClientRef.current.connect({}, (frame: any) => {
-      console.log('Connected: ' + frame)
+        if (response.ok) {
+          const newOrders = await response.json()
 
-      // Subscribe to order updates
-      stompClientRef.current.subscribe('/topic/orders', (message: any) => {
-        const orderUpdate = JSON.parse(message.body)
-        handleOrderUpdate(orderUpdate)
-      })
+          // Check for changes and show notifications
+          if (previousOrdersRef.current.length > 0) {
+            detectOrderChanges(previousOrdersRef.current, newOrders)
+          }
 
-      // Subscribe to notifications
-      stompClientRef.current.subscribe('/topic/notifications', (message: any) => {
-        const notification = JSON.parse(message.body)
-        handleNotification(notification)
-      })
-    }, (error: any) => {
-      console.error('WebSocket connection error:', error)
+          previousOrdersRef.current = [...newOrders]
+          setOrders(newOrders)
+          setLastUpdate(new Date())
+        }
+      } catch (error) {
+        console.error('Real-time update error:', error)
+      }
+    }, 10000) // 10 second intervals
+
+    return () => clearInterval(interval)
+  }
+
+  const detectOrderChanges = (oldOrders: Order[], newOrders: Order[]) => {
+    const oldOrderMap = new Map(oldOrders.map(order => [order.id, order]))
+    const newOrderMap = new Map(newOrders.map(order => [order.id, order]))
+
+    // Check for status changes
+    newOrders.forEach(newOrder => {
+      const oldOrder = oldOrderMap.get(newOrder.id)
+      if (oldOrder && oldOrder.status !== newOrder.status) {
+        const statusMessages = {
+          'PENDING': 'Order is now pending',
+          'APPROVED': 'Order has been approved and is being prepared',
+          'COMPLETED': 'Order has been completed',
+          'CANCELLED': 'Order has been cancelled'
+        }
+
+        toast.success(`Order #${newOrder.id} Status Update`, {
+          description: statusMessages[newOrder.status as keyof typeof statusMessages] || 'Status changed to ' + newOrder.status,
+          duration: 5000,
+        })
+      }
     })
-  }
 
-  const handleOrderUpdate = (orderUpdate: any) => {
-    console.log('Order update received:', orderUpdate)
-    // Refresh orders when an update is received
-    fetchOrders()
-  }
-
-  const handleNotification = (notification: any) => {
-    console.log('Notification received:', notification)
-
-    if (notification.type === 'success') {
-      toast.success(notification.message)
-    } else if (notification.type === 'error') {
-      toast.error(notification.message)
-    } else {
-      toast.info(notification.message)
-    }
+    // Check for new orders
+    newOrders.forEach(newOrder => {
+      if (!oldOrderMap.has(newOrder.id)) {
+        toast.info(`New Order Received`, {
+          description: `Order #${newOrder.id} from ${newOrder.customer.name} - $${newOrder.totalAmount.toFixed(2)}`,
+          duration: 5000,
+        })
+      }
+    })
   }
 
   const fetchOrders = async () => {
@@ -105,6 +124,8 @@ export default function OrderListPage() {
       if (response.ok) {
         const data = await response.json()
         setOrders(data)
+        setLastUpdate(new Date())
+        setError("")
       } else {
         setError("Failed to fetch orders")
       }
@@ -251,9 +272,16 @@ export default function OrderListPage() {
               >
                 <Card>
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <RiShoppingBag3Line className="h-6 w-6 text-primary" />
-                      Recent Orders
+                    <CardTitle className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <RiShoppingBag3Line className="h-6 w-6 text-primary" />
+                        Recent Orders
+                      </div>
+                      {lastUpdate && (
+                        <div className="text-xs text-muted-foreground">
+                          Last updated: {lastUpdate.toLocaleTimeString()}
+                        </div>
+                      )}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>

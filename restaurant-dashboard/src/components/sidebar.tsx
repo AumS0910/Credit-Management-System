@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
@@ -61,6 +61,19 @@ export function Sidebar() {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(true)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
+  const [adminData, setAdminData] = useState<{ name: string; username: string } | null>(null)
+
+  useEffect(() => {
+    // Get admin data from localStorage on component mount
+    const data = localStorage.getItem('adminData')
+    if (data) {
+      const parsedData = JSON.parse(data)
+      setAdminData({
+        name: parsedData.name, // Using username as name since that's what we store
+        username: parsedData.username
+      })
+    }
+  }, [])
 
   // Function to determine if a sidebar item is active
   const isActive = (href: string) => pathname === href
@@ -143,7 +156,9 @@ export function Sidebar() {
         <Separator className="mb-4" />
         <div className="flex items-center gap-2">
           <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
-            <span className="text-sm font-medium text-primary">JD</span>
+            <span className="text-sm font-medium text-primary">
+              {adminData?.username?.charAt(0).toUpperCase() || 'U'}
+            </span>
           </div>
           <AnimatePresence initial={false}>
             {isOpen && (
@@ -155,7 +170,7 @@ export function Sidebar() {
                 transition={{ duration: 0.2 }}
                 className="overflow-hidden"
               >
-                <div className="font-medium">John Doe</div>
+                <div className="font-medium">{adminData?.username || 'Loading...'}</div>
                 <div className="text-xs text-muted-foreground">Manager</div>
               </motion.div>
             )}
@@ -209,10 +224,12 @@ export function Sidebar() {
           <div className="p-4 border-t">
             <div className="flex items-center gap-2">
               <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
-                <span className="text-sm font-medium text-primary">JD</span>
+                <span className="text-sm font-medium text-primary">
+                  {adminData?.username?.charAt(0).toUpperCase() || 'U'}
+                </span>
               </div>
               <div>
-                <div className="font-medium">John Doe</div>
+                <div className="font-medium">{adminData?.username || 'Loading...'}</div>
                 <div className="text-xs text-muted-foreground">Manager</div>
               </div>
             </div>

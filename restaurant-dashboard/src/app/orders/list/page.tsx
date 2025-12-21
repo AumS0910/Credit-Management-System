@@ -10,7 +10,7 @@ import { motion } from "framer-motion" // Add this import
 import { getApiUrl } from "@/lib/api"
 
 interface Order {
-  id: number;
+  id: string;
   customer: {
     name: string;
   };
@@ -18,6 +18,7 @@ interface Order {
   totalAmount: number;
   status: string;
   paymentMethod: string;
+  notes?: string;
 }
 
 export default function OrderListPage() {
@@ -59,7 +60,7 @@ export default function OrderListPage() {
     }
   }
 
-  const handleEdit = async (orderId: number) => {
+  const handleEdit = async (orderId: string) => {
     try {
       const adminData = localStorage.getItem('adminData')
       if (!adminData) {
@@ -91,7 +92,7 @@ export default function OrderListPage() {
     }
   }
 
-  const handleDelete = async (orderId: number) => {
+  const handleDelete = async (orderId: string) => {
     if (!confirm("Are you sure you want to delete this order?")) return
 
     try {

@@ -20,6 +20,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import javax.servlet.http.HttpSession;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -35,6 +36,46 @@ public class OrderController {
 
     @Autowired
     private MenuItemService menuItemService;
+
+    // Response DTO for orders with customer information
+    public static class OrderResponse {
+        private String id;
+        private CustomerInfo customer;
+        private String orderDate;
+        private BigDecimal totalAmount;
+        private String status;
+        private String paymentMethod;
+        private String notes;
+
+        public OrderResponse(Order order, Customer customer) {
+            this.id = order.getId();
+            this.customer = new CustomerInfo(customer.getName());
+            this.orderDate = order.getOrderDate().toString();
+            this.totalAmount = order.getTotalAmount();
+            this.status = order.getStatus();
+            this.paymentMethod = order.getPaymentMethod();
+            this.notes = order.getNotes();
+        }
+
+        // Getters
+        public String getId() { return id; }
+        public CustomerInfo getCustomer() { return customer; }
+        public String getOrderDate() { return orderDate; }
+        public BigDecimal getTotalAmount() { return totalAmount; }
+        public String getStatus() { return status; }
+        public String getPaymentMethod() { return paymentMethod; }
+        public String getNotes() { return notes; }
+    }
+
+    public static class CustomerInfo {
+        private String name;
+
+        public CustomerInfo(String name) {
+            this.name = name;
+        }
+
+        public String getName() { return name; }
+    }
 
     @PostMapping
     public ResponseEntity<?> createOrder(@RequestBody OrderRequest orderRequest,
@@ -82,10 +123,23 @@ public class OrderController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Order>> getOrders(@RequestHeader("Admin-ID") String adminId) {
+    public ResponseEntity<List<OrderResponse>> getOrders(@RequestHeader("Admin-ID") String adminId) {
         try {
             List<Order> orders = orderService.getOrdersByAdminId(adminId);
-            return ResponseEntity.ok(orders);
+            List<OrderResponse> orderResponses = new ArrayList<>();
+
+            for (Order order : orders) {
+                try {
+                    Customer customer = customerService.getCustomerById(order.getCustomerId(), adminId)
+                            .orElseThrow(() -> new IllegalArgumentException("Customer not found"));
+                    orderResponses.add(new OrderResponse(order, customer));
+                } catch (Exception e) {
+                    // If customer not found, skip this order or handle gracefully
+                    System.err.println("Customer not found for order: " + order.getId());
+                }
+            }
+
+            return ResponseEntity.ok(orderResponses);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }

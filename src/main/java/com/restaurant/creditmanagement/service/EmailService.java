@@ -1,6 +1,7 @@
 package com.restaurant.creditmanagement.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -8,10 +9,18 @@ import org.springframework.stereotype.Service;
 @Service
 public class EmailService {
 
-    @Autowired
+    @Autowired(required = false)
     private JavaMailSender mailSender;
 
+    @Value("${spring.mail.username:}")
+    private String emailUsername;
+
     public void sendOrderStatusEmail(String toEmail, String customerName, String orderId, String status) {
+        if (mailSender == null || emailUsername.isEmpty()) {
+            System.out.println("Email service not configured - skipping email to: " + toEmail);
+            return;
+        }
+
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setTo(toEmail);
@@ -36,6 +45,11 @@ public class EmailService {
     }
 
     public void sendOrderConfirmationEmail(String toEmail, String customerName, String orderId, double totalAmount) {
+        if (mailSender == null || emailUsername.isEmpty()) {
+            System.out.println("Email service not configured - skipping confirmation email to: " + toEmail);
+            return;
+        }
+
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setTo(toEmail);

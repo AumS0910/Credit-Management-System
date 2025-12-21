@@ -17,10 +17,10 @@ public class RedisMessageListener implements MessageListener {
     @Autowired
     private ApplicationEventPublisher eventPublisher;
 
-    @Autowired
+    @Autowired(required = false)
     private EmailService emailService;
 
-    @Autowired
+    @Autowired(required = false)
     private SmsService smsService;
 
     @Autowired

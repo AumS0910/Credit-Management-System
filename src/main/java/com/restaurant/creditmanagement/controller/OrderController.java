@@ -201,8 +201,8 @@ public class OrderController {
 
     @PutMapping("/{id}")
     public ResponseEntity<?> updateOrder(@PathVariable String id,
-                                        @RequestBody Order updatedOrder,
-                                        @RequestHeader("Admin-ID") String adminId) {
+                                         @RequestBody Order updatedOrder,
+                                         @RequestHeader("Admin-ID") String adminId) {
         try {
             Order existingOrder = orderService.getOrderById(id);
             if (!existingOrder.getAdminId().equals(adminId)) {
@@ -215,6 +215,107 @@ public class OrderController {
             existingOrder.setNotes(updatedOrder.getNotes());
 
             Order savedOrder = orderService.updateOrder(existingOrder);
+
+            // Send real-time update
+            try {
+                webSocketController.sendOrderUpdate(savedOrder, "UPDATED");
+            } catch (Exception e) {
+                System.err.println("Failed to send WebSocket update: " + e.getMessage());
+            }
+
+            return ResponseEntity.ok(savedOrder);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/{id}/start")
+    public ResponseEntity<?> startOrder(@PathVariable String id,
+                                       @RequestHeader("Admin-ID") String adminId) {
+        try {
+            Order order = orderService.getOrderById(id);
+            if (!order.getAdminId().equals(adminId)) {
+                return ResponseEntity.notFound().build();
+            }
+
+            if (!"PENDING".equals(order.getStatus())) {
+                return ResponseEntity.badRequest().body("Order can only be started from PENDING status");
+            }
+
+            order.setStatus("APPROVED");
+            Order savedOrder = orderService.updateOrder(order);
+
+            // Send real-time update
+            try {
+                webSocketController.sendOrderUpdate(savedOrder, "STATUS_CHANGED");
+                webSocketController.sendNotification("success",
+                    "Order #" + savedOrder.getId() + " has been approved and is being prepared", savedOrder.getId());
+            } catch (Exception e) {
+                System.err.println("Failed to send WebSocket update: " + e.getMessage());
+            }
+
+            return ResponseEntity.ok(savedOrder);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/{id}/complete")
+    public ResponseEntity<?> completeOrder(@PathVariable String id,
+                                          @RequestHeader("Admin-ID") String adminId) {
+        try {
+            Order order = orderService.getOrderById(id);
+            if (!order.getAdminId().equals(adminId)) {
+                return ResponseEntity.notFound().build();
+            }
+
+            if (!"APPROVED".equals(order.getStatus())) {
+                return ResponseEntity.badRequest().body("Order can only be completed from APPROVED status");
+            }
+
+            order.setStatus("COMPLETED");
+            Order savedOrder = orderService.updateOrder(order);
+
+            // Send real-time update
+            try {
+                webSocketController.sendOrderUpdate(savedOrder, "STATUS_CHANGED");
+                webSocketController.sendNotification("success",
+                    "Order #" + savedOrder.getId() + " has been completed", savedOrder.getId());
+            } catch (Exception e) {
+                System.err.println("Failed to send WebSocket update: " + e.getMessage());
+            }
+
+            return ResponseEntity.ok(savedOrder);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/{id}/cancel")
+    public ResponseEntity<?> cancelOrder(@PathVariable String id,
+                                        @RequestHeader("Admin-ID") String adminId) {
+        try {
+            Order order = orderService.getOrderById(id);
+            if (!order.getAdminId().equals(adminId)) {
+                return ResponseEntity.notFound().build();
+            }
+
+            if ("COMPLETED".equals(order.getStatus()) || "CANCELLED".equals(order.getStatus())) {
+                return ResponseEntity.badRequest().body("Cannot cancel order in " + order.getStatus() + " status");
+            }
+
+            order.setStatus("CANCELLED");
+            Order savedOrder = orderService.updateOrder(order);
+
+            // Send real-time update
+            try {
+                webSocketController.sendOrderUpdate(savedOrder, "CANCELLED");
+                webSocketController.sendNotification("error",
+                    "Order #" + savedOrder.getId() + " has been cancelled", savedOrder.getId());
+            } catch (Exception e) {
+                System.err.println("Failed to send WebSocket update: " + e.getMessage());
+            }
+
             return ResponseEntity.ok(savedOrder);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());

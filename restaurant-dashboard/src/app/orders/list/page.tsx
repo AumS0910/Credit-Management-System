@@ -200,10 +200,18 @@ export default function OrderListPage() {
 
   const handleStartOrder = async (orderId: string) => {
     try {
+      const adminData = localStorage.getItem('adminData')
+      if (!adminData) {
+        router.push('/login')
+        return
+      }
+      const { id } = JSON.parse(adminData)
+
       const response = await fetch(getApiUrl(`/orders/${orderId}/start`), {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          "Admin-ID": id.toString()
         }
       })
 
@@ -211,7 +219,8 @@ export default function OrderListPage() {
         // Real-time polling will detect the change and show notification
         console.log("Order started successfully")
       } else {
-        setError("Failed to start order")
+        const errorData = await response.json()
+        setError(errorData.message || "Failed to start order")
       }
     } catch (error) {
       setError("An error occurred while starting the order")
@@ -220,17 +229,26 @@ export default function OrderListPage() {
 
   const handleCompleteOrder = async (orderId: string) => {
     try {
+      const adminData = localStorage.getItem('adminData')
+      if (!adminData) {
+        router.push('/login')
+        return
+      }
+      const { id } = JSON.parse(adminData)
+
       const response = await fetch(getApiUrl(`/orders/${orderId}/complete`), {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          "Admin-ID": id.toString()
         }
       })
 
       if (response.ok) {
         console.log("Order completed successfully")
       } else {
-        setError("Failed to complete order")
+        const errorData = await response.json()
+        setError(errorData.message || "Failed to complete order")
       }
     } catch (error) {
       setError("An error occurred while completing the order")
@@ -241,17 +259,26 @@ export default function OrderListPage() {
     if (!confirm("Are you sure you want to cancel this order?")) return
 
     try {
+      const adminData = localStorage.getItem('adminData')
+      if (!adminData) {
+        router.push('/login')
+        return
+      }
+      const { id } = JSON.parse(adminData)
+
       const response = await fetch(getApiUrl(`/orders/${orderId}/cancel`), {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          "Admin-ID": id.toString()
         }
       })
 
       if (response.ok) {
         console.log("Order cancelled successfully")
       } else {
-        setError("Failed to cancel order")
+        const errorData = await response.json()
+        setError(errorData.message || "Failed to cancel order")
       }
     } catch (error) {
       setError("An error occurred while cancelling the order")

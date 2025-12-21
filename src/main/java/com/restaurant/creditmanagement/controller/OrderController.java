@@ -1,11 +1,15 @@
 package com.restaurant.creditmanagement.controller;
 
 import com.restaurant.creditmanagement.model.Customer;
+import com.restaurant.creditmanagement.model.MenuItem;
 import com.restaurant.creditmanagement.model.Order;
 import com.restaurant.creditmanagement.model.PaymentMethod;
 import com.restaurant.creditmanagement.service.CustomerService;
 import com.restaurant.creditmanagement.service.OrderService;
 import com.restaurant.creditmanagement.service.MenuItemService;
+import com.restaurant.creditmanagement.service.KafkaProducerService;
+import com.restaurant.creditmanagement.events.OrderEvent;
+import com.restaurant.creditmanagement.events.OrderItemEvent;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -36,6 +40,9 @@ public class OrderController {
 
     @Autowired
     private MenuItemService menuItemService;
+
+    @Autowired
+    private KafkaProducerService kafkaProducerService;
 
     // Response DTO for orders with customer information
     public static class OrderResponse {
@@ -115,6 +122,36 @@ public class OrderController {
             Order savedOrder = orderService.createOrder(order,
                     orderRequest.getMenuItemIds(),
                     orderRequest.getQuantities());
+
+            // Publish order created event to Kafka
+            try {
+                OrderEvent orderEvent = new OrderEvent("ORDER_CREATED", savedOrder.getId(), adminId);
+                orderEvent.setCustomerId(customer.getId());
+                orderEvent.setCustomerName(customer.getName());
+                orderEvent.setTotalAmount(savedOrder.getTotalAmount());
+                orderEvent.setPaymentMethod(savedOrder.getPaymentMethod());
+                orderEvent.setNewStatus(savedOrder.getStatus());
+                orderEvent.setNotes(savedOrder.getNotes());
+
+                // Add order items to the event
+                List<OrderItemEvent> orderItemEvents = new ArrayList<>();
+                for (String menuItemId : orderRequest.getMenuItemIds()) {
+                    MenuItem menuItem = menuItemService.getMenuItemById(menuItemId);
+                    if (menuItem != null) {
+                        // Find the quantity for this menu item
+                        int index = orderRequest.getMenuItemIds().indexOf(menuItemId);
+                        int quantity = orderRequest.getQuantities().get(index);
+                        OrderItemEvent itemEvent = new OrderItemEvent(menuItemId, menuItem.getName(), quantity, menuItem.getPrice());
+                        orderItemEvents.add(itemEvent);
+                    }
+                }
+                orderEvent.setOrderItems(orderItemEvents);
+
+                kafkaProducerService.sendOrderCreatedEvent(orderEvent);
+            } catch (Exception e) {
+                // Log error but don't fail the order creation
+                System.err.println("Failed to publish order created event: " + e.getMessage());
+            }
 
             return ResponseEntity.ok(savedOrder);
         } catch (Exception e) {

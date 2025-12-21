@@ -116,6 +116,20 @@ cd miniProjectSem4-master
    - Run your application: `./mvnw spring-boot:run`
    - Check logs for successful MongoDB connection
 
+#### Kafka Configuration
+Add Kafka configuration to `src/main/resources/application.properties`:
+```properties
+# Kafka Configuration
+spring.kafka.bootstrap-servers=localhost:9092
+spring.kafka.producer.key-serializer=org.apache.kafka.common.serialization.StringSerializer
+spring.kafka.producer.value-serializer=org.springframework.kafka.support.serializer.JsonSerializer
+spring.kafka.consumer.group-id=restaurant-group
+spring.kafka.consumer.auto-offset-reset=earliest
+spring.kafka.consumer.key-deserializer=org.apache.kafka.common.serialization.StringDeserializer
+spring.kafka.consumer.value-deserializer=org.springframework.kafka.support.serializer.JsonDeserializer
+spring.kafka.consumer.properties.spring.json.trusted.packages=com.restaurant.creditmanagement.events
+```
+
 #### Pexels API Setup (Optional)
 Get an API key from [Pexels](https://www.pexels.com/api/) and add it to `application.properties`:
 ```properties

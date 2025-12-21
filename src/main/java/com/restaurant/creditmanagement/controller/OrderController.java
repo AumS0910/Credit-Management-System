@@ -131,11 +131,21 @@ public class OrderController {
             for (Order order : orders) {
                 try {
                     Customer customer = customerService.getCustomerById(order.getCustomerId(), adminId)
-                            .orElseThrow(() -> new IllegalArgumentException("Customer not found"));
-                    orderResponses.add(new OrderResponse(order, customer));
+                            .orElse(null);
+                    if (customer != null) {
+                        orderResponses.add(new OrderResponse(order, customer));
+                    } else {
+                        // Create response with placeholder customer for missing customers
+                        Customer placeholderCustomer = new Customer();
+                        placeholderCustomer.setName("Unknown Customer");
+                        orderResponses.add(new OrderResponse(order, placeholderCustomer));
+                    }
                 } catch (Exception e) {
-                    // If customer not found, skip this order or handle gracefully
-                    System.err.println("Customer not found for order: " + order.getId());
+                    // If there's an error, still include the order with placeholder customer
+                    System.err.println("Error processing order: " + order.getId() + ", " + e.getMessage());
+                    Customer placeholderCustomer = new Customer();
+                    placeholderCustomer.setName("Unknown Customer");
+                    orderResponses.add(new OrderResponse(order, placeholderCustomer));
                 }
             }
 

@@ -8,10 +8,8 @@ A comprehensive restaurant management system with credit tracking capabilities, 
 - 👥 **Customer Management** - Add, edit, delete, and search customers with credit balance tracking
 - 🍽️ **Menu Management** - Create and manage menu items with image integration via Pexels API
 - 📊 **Credit Tracking** - Monitor customer credit balances and settlement history
-- 📈 **Analytics Dashboard** - Real-time statistics on revenue, orders, and customers
+- 📈 **Analytics Dashboard** - Statistics on revenue, orders, and customers
 - 🛍️ **Order Management** - Create, update, and track orders with status management
-- ⚡ **Real-time Order Updates** - Instant WebSocket-based order status updates and notifications
-- 🔄 **Event-Driven Architecture** - Redis pub/sub messaging for instant system-wide notifications
 - 💳 **Payment Processing** - Handle credit settlements and transaction records
 - 📋 **Reports** - Detailed analytics and reporting capabilities
 - 🎨 **Modern UI** - Responsive dashboard with glassmorphism design
@@ -28,17 +26,12 @@ A comprehensive restaurant management system with credit tracking capabilities, 
 - **Chart.js 4.4.8 & Recharts 2.15.2** - Data visualization
 - **React Hook Form 7.55.0** - Form handling
 - **Zod 3.24.2** - Schema validation
-- **SockJS 1.6.1 & STOMP.js 7.2.1** - WebSocket communication
-- **Sonner 2.0.3** - Toast notifications
 
 ### Backend
 - **Spring Boot 2.7.0** - Java framework for REST API
 - **Java 11** - Programming language
 - **MongoDB Atlas** - Cloud NoSQL database
-- **Redis Cloud** - In-memory data store for pub/sub messaging
 - **Spring Data MongoDB** - MongoDB integration
-- **Spring Data Redis** - Redis integration
-- **Spring WebSocket** - Real-time communication
 - **Spring Security** - Authentication and authorization
 - **BCrypt** - Password hashing
 - **Lombok 1.18.30** - Code generation
@@ -49,7 +42,6 @@ A comprehensive restaurant management system with credit tracking capabilities, 
 - **Bun** (optional alternative to npm) - Fast JavaScript runtime and package manager
 - **Java JDK 11** - For running the backend
 - **MongoDB** - NoSQL database (local or cloud)
-- **Redis** - In-memory data store (local or cloud)
 - **Maven** - Build tool for Java projects
 - **Git** - Version control
 
@@ -124,32 +116,6 @@ cd miniProjectSem4-master
    - Run your application: `./mvnw spring-boot:run`
    - Check logs for successful MongoDB connection
 
-#### Redis Configuration
-
-**Option A: Local Redis**
-1. Install Redis locally or use Docker
-2. Redis will be available on `localhost:6379`
-
-**Option B: Redis Cloud (Recommended)**
-
-1. **Create Redis Cloud Account**
-   - Go to [Redis Cloud](https://redis.com/try-free/)
-   - Sign up for a free account
-   - Create a new database (Free tier available)
-
-2. **Get Connection Details**
-   - Copy the connection URL from your Redis Cloud dashboard
-   - It will look like: `redis://username:password@host:port`
-
-3. **Update Application Configuration**
-   - Set the `REDIS_URL` environment variable:
-   ```bash
-   REDIS_URL=redis://username:password@host:port
-   ```
-
-4. **Test Connection**
-   - Run your application: `./mvnw spring-boot:run`
-   - Check logs for successful Redis connection
 
 #### Pexels API Setup (Optional)
 Get an API key from [Pexels](https://www.pexels.com/api/) and add it to `application.properties`:
@@ -245,25 +211,6 @@ The application automatically creates a default admin user on startup:
 - `GET /api/dashboard/{adminId}` - Get dashboard statistics
 - `GET /api/reports/detailed` - Get detailed analytics (requires Admin-ID header)
 
-### Real-time Features
-
-The application includes real-time capabilities using WebSocket connections and Redis pub/sub messaging:
-
-#### WebSocket Endpoints
-- **STOMP Endpoint**: `/ws` - Main WebSocket endpoint for real-time communication
-- **Order Updates Topic**: `/topic/orders` - Subscribe to receive instant order status updates
-- **Order Action Endpoint**: `/app/order-action` - Send order status change messages
-
-#### Real-time Order Management
-- **Instant Updates**: Order status changes are immediately reflected across all connected clients
-- **Toast Notifications**: Users receive instant notifications for order status changes
-- **Event-Driven Architecture**: Redis pub/sub ensures reliable message delivery across multiple instances
-- **Automatic Reconnection**: WebSocket connections automatically reconnect on network issues
-
-#### Notification System
-- **Order Status Changes**: Automatic notifications when orders are confirmed, prepared, or completed
-- **Real-time Dashboard**: Live updates to statistics and order lists
-- **Multi-tab Synchronization**: Changes in one browser tab instantly update all other tabs
 
 ## Project Structure
 
@@ -271,19 +218,11 @@ The application includes real-time capabilities using WebSocket connections and 
 miniProjectSem4-master/
 ├── src/main/java/com/restaurant/creditmanagement/  # Backend source
 │   ├── controller/                                 # REST controllers
-│   │   ├── WebSocketController.java                # WebSocket messaging
-│   │   └── ...                                     # Other controllers
 │   ├── model/                                      # MongoDB documents
 │   ├── repository/                                 # MongoDB repositories
 │   ├── service/                                    # Business logic
-│   │   ├── RedisMessagePublisher.java              # Redis pub/sub publisher
-│   │   ├── RedisMessageListener.java               # Redis message listener
-│   │   └── ...                                     # Other services
 │   ├── security/                                   # Security configuration
 │   └── config/                                     # App configuration
-│       ├── WebSocketConfig.java                    # WebSocket configuration
-│       ├── RedisConfig.java                        # Redis configuration
-│       └── ...                                     # Other configs
 ├── src/main/resources/                             # Resources
 │   ├── templates/                                  # Thymeleaf templates
 │   ├── static/                                     # Static assets
@@ -292,8 +231,6 @@ miniProjectSem4-master/
 ├── restaurant-dashboard/                           # Frontend application
 │   ├── src/
 │   │   ├── app/                                    # Next.js app router
-│   │   │   ├── orders/list/page.tsx                # Real-time order management
-│   │   │   └── ...                                 # Other pages
 │   │   ├── components/                             # React components
 │   │   ├── hooks/                                  # Custom hooks
 │   │   ├── lib/                                    # Utilities

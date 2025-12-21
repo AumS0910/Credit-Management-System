@@ -1,16 +1,13 @@
 "use client"
 
-import React, { useState, useEffect, useRef } from "react"
+import React, { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Sidebar } from "@/components/sidebar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { RiShoppingBag3Line, RiAddLine, RiEyeLine, RiEditLine, RiDeleteBinLine, RiPlayLine, RiCheckLine, RiCloseLine } from "react-icons/ri"
-import { motion } from "framer-motion" // Add this import
+import { motion } from "framer-motion"
 import { getApiUrl } from "@/lib/api"
-import SockJS from 'sockjs-client'
-import { Stomp } from '@stomp/stompjs'
-import { toast } from "sonner"
 
 interface Order {
   id: string;
@@ -29,105 +26,11 @@ export default function OrderListPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
-  const stompClientRef = useRef<any>(null)
 
   useEffect(() => {
     fetchOrders()
-    connectWebSocket()
-
-    return () => {
-      if (stompClientRef.current) {
-        stompClientRef.current.deactivate()
-      }
-    }
   }, [])
 
-  const connectWebSocket = () => {
-    // Use the API base URL for WebSocket connection
-    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'
-
-    // For production (HTTPS), use secure WebSocket
-    // For development (HTTP), use regular SockJS
-    const isProduction = typeof window !== 'undefined' && window.location.protocol === 'https:'
-
-    let socket
-    if (isProduction) {
-      // In production, try direct WebSocket first (better for HTTPS)
-      try {
-        const wsUrl = apiBaseUrl.replace(/^https:/, 'wss:') + '/ws'
-        console.log('Connecting to secure WebSocket:', wsUrl)
-        socket = new WebSocket(wsUrl)
-        stompClientRef.current = Stomp.over(socket)
-      } catch (error) {
-        console.log('Direct WebSocket failed in production, this should not happen')
-        return
-      }
-    } else {
-      // In development, use SockJS (works with HTTP)
-      const wsUrl = `${apiBaseUrl}/ws`
-      console.log('Connecting to SockJS:', wsUrl)
-      socket = new SockJS(wsUrl)
-      stompClientRef.current = Stomp.over(socket)
-    }
-
-    stompClientRef.current.connect({}, (frame: any) => {
-      console.log('Connected to WebSocket:', frame)
-
-      // Subscribe to order updates
-      stompClientRef.current.subscribe('/topic/orders', (message: any) => {
-        const orderUpdate = JSON.parse(message.body)
-        handleOrderUpdate(orderUpdate)
-      })
-
-      // Subscribe to notifications
-      stompClientRef.current.subscribe('/topic/notifications', (message: any) => {
-        const notification = JSON.parse(message.body)
-        handleNotification(notification)
-      })
-
-      // Send initial connection message
-      stompClientRef.current.send('/app/connect', {}, JSON.stringify({ type: 'ADMIN_CONNECTED' }))
-
-    }, (error: any) => {
-      console.error('WebSocket connection error:', error)
-      // Retry connection after 5 seconds
-      setTimeout(connectWebSocket, 5000)
-    })
-  }
-
-  const handleOrderUpdate = (orderUpdate: any) => {
-    console.log('Real-time order update received:', orderUpdate)
-
-    // Refresh the orders list when an update is received
-    fetchOrders()
-
-    // Show appropriate notification based on action
-    const actionMessages = {
-      'CREATED': 'New order has been created',
-      'STATUS_CHANGED': 'Order status has been updated',
-      'UPDATED': 'Order has been updated',
-      'CANCELLED': 'Order has been cancelled'
-    }
-
-    toast.success(`Order Update`, {
-      description: actionMessages[orderUpdate.action as keyof typeof actionMessages] || 'Order has been updated',
-      duration: 4000,
-    })
-  }
-
-  const handleNotification = (notification: any) => {
-    console.log('Real-time notification received:', notification)
-
-    if (notification.type === 'success') {
-      toast.success(notification.message, { duration: 5000 })
-    } else if (notification.type === 'error') {
-      toast.error(notification.message, { duration: 5000 })
-    } else if (notification.type === 'info') {
-      toast.info(notification.message, { duration: 5000 })
-    } else {
-      toast(notification.message, { duration: 5000 })
-    }
-  }
 
   const fetchOrders = async () => {
     try {
@@ -239,8 +142,9 @@ export default function OrderListPage() {
       })
 
       if (response.ok) {
-        // Real-time polling will detect the change and show notification
         console.log("Order started successfully")
+        // Refresh the orders list to show updated status
+        fetchOrders()
       } else {
         const errorData = await response.json()
         setError(errorData.message || "Failed to start order")
@@ -269,6 +173,8 @@ export default function OrderListPage() {
 
       if (response.ok) {
         console.log("Order completed successfully")
+        // Refresh the orders list to show updated status
+        fetchOrders()
       } else {
         const errorData = await response.json()
         setError(errorData.message || "Failed to complete order")
@@ -299,6 +205,8 @@ export default function OrderListPage() {
 
       if (response.ok) {
         console.log("Order cancelled successfully")
+        // Refresh the orders list to show updated status
+        fetchOrders()
       } else {
         const errorData = await response.json()
         setError(errorData.message || "Failed to cancel order")
@@ -385,9 +293,6 @@ export default function OrderListPage() {
                     <CardTitle className="flex items-center gap-2">
                       <RiShoppingBag3Line className="h-6 w-6 text-primary" />
                       Recent Orders
-                      <div className="ml-auto text-xs text-muted-foreground">
-                        Live Updates Active
-                      </div>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>

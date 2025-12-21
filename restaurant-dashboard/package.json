@@ -25,7 +25,6 @@
     "@radix-ui/react-toast": "^1.2.7",
     "@radix-ui/react-tooltip": "^1.2.0",
     "@react-spring/web": "^9.7.5",
-    "@stomp/stompjs": "^7.2.1",
     "chart.js": "^4.4.8",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -42,9 +41,6 @@
     "react-icons": "^5.5.0",
     "react-use-measure": "^2.1.7",
     "recharts": "^2.15.2",
-    "sockjs-client": "^1.6.1",
-    "sonner": "^2.0.3",
-    "stompjs": "^2.3.3",
     "tailwind-merge": "^3.0.1",
     "tailwindcss-animate": "^1.0.7",
     "zod": "^3.24.2"

@@ -18,12 +18,14 @@ A comprehensive restaurant management system with credit tracking capabilities, 
 
 ### Frontend
 - **Next.js 15.4.0** - React framework for the dashboard
-- **TypeScript** - Type-safe JavaScript
-- **Tailwind CSS** - Utility-first CSS framework
+- **TypeScript 5.0** - Type-safe JavaScript
+- **Tailwind CSS 3.4.1** - Utility-first CSS framework
 - **Shadcn UI** - Modern component library
-- **Framer Motion** - Animation library
-- **React Icons** - Icon library
-- **Chart.js & Recharts** - Data visualization
+- **Framer Motion 12.6.5** - Animation library
+- **React Icons 5.5.0** - Icon library
+- **Chart.js 4.4.8 & Recharts 2.15.2** - Data visualization
+- **React Hook Form 7.55.0** - Form handling
+- **Zod 3.24.2** - Schema validation
 
 ### Backend
 - **Spring Boot 2.7.0** - Java framework for REST API
@@ -32,10 +34,12 @@ A comprehensive restaurant management system with credit tracking capabilities, 
 - **Spring Data MongoDB** - MongoDB integration
 - **Spring Security** - Authentication and authorization
 - **BCrypt** - Password hashing
+- **Lombok 1.18.30** - Code generation
 
 ## Prerequisites
 
 - **Node.js** (v18 or higher) - For running the frontend
+- **Bun** (optional alternative to npm) - Fast JavaScript runtime and package manager
 - **Java JDK 11** - For running the backend
 - **MongoDB** - NoSQL database (local or cloud)
 - **Maven** - Build tool for Java projects
@@ -121,11 +125,14 @@ pexels.api.key=your_pexels_api_key
 #### Build and Run Backend
 ```bash
 # Navigate to backend directory (root)
-mvn clean install
 mvn spring-boot:run
 ```
 
 The backend will start on `http://localhost:8080`
+
+**Note**: The `application.properties` file is gitignored for security. You'll need to create it manually with your MongoDB configuration as shown above.
+
+**CORS Configuration**: The backend is configured to accept requests from `http://localhost:3000` (development) and `https://credit-management-system.vercel.app` (production).
 
 ### 3. Frontend Setup
 
@@ -133,20 +140,24 @@ The backend will start on `http://localhost:8080`
 # Navigate to frontend directory
 cd restaurant-dashboard
 
-# Install dependencies
+# Install dependencies (choose one)
 npm install
-# or
+# or (faster alternative)
 bun install
 
 # Copy environment variables
+# On Windows:
+copy .env.example .env.local
+# On Linux/Mac:
 cp .env.example .env.local
 
 # Update API base URL if needed (default: http://localhost:8080)
-echo "NEXT_PUBLIC_API_BASE_URL=http://localhost:8080" > .env.local
+# The .env.local file should contain:
+# NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
 
-# Run development server
+# Run development server (choose one)
 npm run dev
-# or
+# or (faster alternative)
 bun dev
 ```
 
@@ -160,10 +171,12 @@ The application automatically creates a default admin user on startup:
 - **Password**: admin123
 
 ### Accessing the Dashboard
-1. Login using the API endpoint: `POST /api/login` or use the frontend at `http://localhost:3000`
+1. Login using the API endpoint: `POST /api/admin/login` or use the frontend at `http://localhost:3000`
 2. Access the modern dashboard at `http://localhost:3000`
 
 ### API Endpoints
+
+**Note**: Most API endpoints require an `Admin-ID` header for authentication.
 
 #### Authentication
 - `POST /api/admin/register` - Register new admin
@@ -171,30 +184,31 @@ The application automatically creates a default admin user on startup:
 - `POST /api/admin/logout` - Admin logout
 
 #### Customers
-- `GET /api/customers` - List all customers
-- `POST /api/customers/add` - Add new customer
-- `GET /api/customers/{id}` - Get customer details
-- `PUT /api/customers/{id}/update` - Update customer
+- `GET /api/customers` - List all customers (requires Admin-ID header)
+- `POST /api/customers/add` - Add new customer (requires Admin-ID header)
+- `GET /api/customers/{id}` - Get customer details (requires Admin-ID header)
+- `PUT /api/customers/{id}/update` - Update customer (requires Admin-ID header)
 - `DELETE /api/customers/{id}/delete` - Delete customer
-- `POST /api/customers/{id}/settle` - Settle customer balance
+- `POST /api/customers/{id}/settle` - Settle customer balance (requires Admin-ID header)
+- `GET /api/customers/search` - Search customers (requires Admin-ID header)
 
 #### Menu Items
-- `GET /api/menu-items` - List menu items
-- `POST /api/menu-items/add` - Add menu item
-- `GET /api/menu-items/{id}` - Get menu item
-- `PUT /api/menu-items/{id}` - Update menu item
+- `GET /api/menu-items` - List menu items (requires Admin-ID header)
+- `POST /api/menu-items/add` - Add menu item (requires Admin-ID header)
+- `GET /api/menu-items/{id}` - Get menu item (requires Admin-ID header)
+- `PUT /api/menu-items/{id}` - Update menu item (requires Admin-ID header)
 - `DELETE /api/menu-items/{id}` - Delete menu item
 
 #### Orders
-- `POST /api/orders` - Create new order
-- `GET /api/orders` - List orders
-- `GET /api/orders/{id}` - Get order details
-- `PUT /api/orders/{id}` - Update order
+- `POST /api/orders` - Create new order (requires Admin-ID header)
+- `GET /api/orders` - List orders (requires Admin-ID header)
+- `GET /api/orders/{id}` - Get order details (requires Admin-ID header)
+- `PUT /api/orders/{id}` - Update order (requires Admin-ID header)
 - `DELETE /api/orders/{id}` - Delete order
 
 #### Dashboard & Reports
 - `GET /api/dashboard/{adminId}` - Get dashboard statistics
-- `GET /api/reports/detailed` - Get detailed analytics
+- `GET /api/reports/detailed` - Get detailed analytics (requires Admin-ID header)
 
 ## Project Structure
 
@@ -243,6 +257,8 @@ mvn clean package
 
 # Frontend
 npm run build
+# or
+bun run build
 ```
 
 ## Deployment
@@ -264,6 +280,8 @@ npm run build
 # 3. Frontend (in another terminal)
 cd restaurant-dashboard
 npm run dev
+# or
+bun dev
 ```
 
 ### Production Deployment

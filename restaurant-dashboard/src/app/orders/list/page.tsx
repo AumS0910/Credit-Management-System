@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { Sidebar } from "@/components/sidebar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { RiShoppingBag3Line, RiAddLine, RiEyeLine, RiEditLine, RiDeleteBinLine } from "react-icons/ri"
+import { RiShoppingBag3Line, RiAddLine, RiEyeLine, RiEditLine, RiDeleteBinLine, RiPlayLine, RiCheckLine, RiCloseLine } from "react-icons/ri"
 import { motion } from "framer-motion" // Add this import
 import { getApiUrl } from "@/lib/api"
 import { toast } from "sonner"
@@ -198,6 +198,66 @@ export default function OrderListPage() {
     }
   }
 
+  const handleStartOrder = async (orderId: string) => {
+    try {
+      const response = await fetch(getApiUrl(`/orders/${orderId}/start`), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
+
+      if (response.ok) {
+        // Real-time polling will detect the change and show notification
+        console.log("Order started successfully")
+      } else {
+        setError("Failed to start order")
+      }
+    } catch (error) {
+      setError("An error occurred while starting the order")
+    }
+  }
+
+  const handleCompleteOrder = async (orderId: string) => {
+    try {
+      const response = await fetch(getApiUrl(`/orders/${orderId}/complete`), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
+
+      if (response.ok) {
+        console.log("Order completed successfully")
+      } else {
+        setError("Failed to complete order")
+      }
+    } catch (error) {
+      setError("An error occurred while completing the order")
+    }
+  }
+
+  const handleCancelOrder = async (orderId: string) => {
+    if (!confirm("Are you sure you want to cancel this order?")) return
+
+    try {
+      const response = await fetch(getApiUrl(`/orders/${orderId}/cancel`), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
+
+      if (response.ok) {
+        console.log("Order cancelled successfully")
+      } else {
+        setError("Failed to cancel order")
+      }
+    } catch (error) {
+      setError("An error occurred while cancelling the order")
+    }
+  }
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('en-US', {
       year: 'numeric',
@@ -320,18 +380,59 @@ export default function OrderListPage() {
                             </div>
                             <div className="flex items-center gap-2">
                               <p className="font-medium">${order.totalAmount.toFixed(2)}</p>
+
+                              {/* Action buttons based on order status */}
+                              {order.status === 'PENDING' && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleStartOrder(order.id.toString())}
+                                  className="text-green-600 hover:text-green-700"
+                                  title="Start Order"
+                                >
+                                  <RiPlayLine className="h-4 w-4" />
+                                </Button>
+                              )}
+
+                              {order.status === 'APPROVED' && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleCompleteOrder(order.id.toString())}
+                                  className="text-blue-600 hover:text-blue-700"
+                                  title="Complete Order"
+                                >
+                                  <RiCheckLine className="h-4 w-4" />
+                                </Button>
+                              )}
+
+                              {order.status !== 'COMPLETED' && order.status !== 'CANCELLED' && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleCancelOrder(order.id.toString())}
+                                  className="text-orange-600 hover:text-orange-700"
+                                  title="Cancel Order"
+                                >
+                                  <RiCloseLine className="h-4 w-4" />
+                                </Button>
+                              )}
+
                               <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={() => handleEdit(order.id)}
+                                title="Edit Order"
                               >
                                 <RiEditLine className="h-4 w-4" />
                               </Button>
+
                               <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={() => handleDelete(order.id)}
                                 className="text-red-500 hover:text-red-700"
+                                title="Delete Order"
                               >
                                 <RiDeleteBinLine className="h-4 w-4" />
                               </Button>

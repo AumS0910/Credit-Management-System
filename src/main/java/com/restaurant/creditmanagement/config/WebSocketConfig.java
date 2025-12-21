@@ -22,11 +22,19 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         // Register the WebSocket endpoint
         registry.addEndpoint("/ws")
-                .setAllowedOriginPatterns("*") // Allow all origins for flexibility
+                .setAllowedOriginPatterns(
+                    "http://localhost:3000",           // Local development
+                    "https://credit-management-system.vercel.app",  // Production frontend
+                    "https://*.vercel.app"             // Allow all Vercel domains
+                )
                 .withSockJS(); // Enable SockJS fallback
 
         // Also register without SockJS for direct WebSocket connections
         registry.addEndpoint("/ws")
-                .setAllowedOriginPatterns("*");
+                .setAllowedOriginPatterns(
+                    "http://localhost:3000",           // Local development
+                    "https://credit-management-system.vercel.app",  // Production frontend
+                    "https://*.vercel.app"             // Allow all Vercel domains
+                );
     }
 }
